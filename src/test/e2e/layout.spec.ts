@@ -117,7 +117,8 @@ test.describe('Layout Structure E2E Tests', () => {
           treeBox.y >= sidebarBox.y - 10
         );
       },
-      ['aside', '[role="tree"][aria-label="File tree navigation"]']
+      ['aside', '[role="tree"][aria-label="File tree navigation"]'],
+      { timeout: 5000 }
     );
 
     const sidebarBox = await sidebar.boundingBox();
@@ -202,10 +203,14 @@ test.describe('Layout Structure E2E Tests', () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
     // Wait for layout to adjust (deterministic)
-    await page.waitForFunction((expectedWidth) => {
-      const main = document.querySelector('main');
-      return main && main.getBoundingClientRect().width > expectedWidth;
-    }, 1600);
+    await page.waitForFunction(
+      (expectedWidth) => {
+        const main = document.querySelector('main');
+        return main && main.getBoundingClientRect().width > expectedWidth;
+      },
+      1600,
+      { timeout: 5000 }
+    );
 
     // Re-check layout
     sidebarBox = await sidebar.boundingBox();
