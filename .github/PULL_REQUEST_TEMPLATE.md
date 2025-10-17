@@ -81,7 +81,6 @@ Closes #
 
 - [ ] I understand how conventional commits affect versioning
 - [ ] I have NOT accidentally used `BREAKING CHANGE:` keyword
-- [ ] Check PR Release Preview comment above for version impact
 
 ## Additional Notes
 
