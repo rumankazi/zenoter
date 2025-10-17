@@ -73,6 +73,39 @@ VERSION_CONTROL: false,
 6. **Implement feature flags for gradual rollout**
 7. **Keep infrastructure costs minimal until scaling needed**
 8. **CRITICAL: Maintain CSP compliance - NO inline styles or CSS-in-JS**
+9. **ALWAYS research best practices from top-tier projects (VS Code, Electron official docs)**
+10. **Security-first approach: Follow Electron Security Guide**
+
+## Security & CSP Best Practices
+
+**ALWAYS follow strict CSP even in development!**
+
+**Reference Projects**:
+
+- VS Code: https://github.com/microsoft/vscode
+- Electron Security: https://electronjs.org/docs/tutorial/security
+
+### CSP Implementation Rules:
+
+1. **NEVER use 'unsafe-inline' or 'unsafe-eval' in production**
+2. **Apply CSP via Electron session.defaultSession.webRequest.onHeadersReceived**
+3. **Remove CSP meta tags from HTML** - Electron controls CSP
+4. **Development mode**: Use nonce-based CSP for Vite HMR
+5. **Production mode**: Strict CSP (script-src 'self', style-src 'self')
+
+### Why No Meta Tag CSP?
+
+- Vite dev server injects styles via JavaScript for HMR
+- Meta tag CSP blocks this → CSS Modules don't load → broken UI
+- Solution: CSP via HTTP headers in Electron main process
+
+### Problem-Solving Approach:
+
+1. **Research** how VS Code/Electron/similar projects solve it
+2. **Check** official documentation and security guides
+3. **Implement** security-first solutions
+4. **Test** in both dev and production modes
+5. **Document** decisions in code comments
 
 ## Documentation Strategy
 

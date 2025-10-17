@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' ws://localhost:5173 wss://localhost:5173;"
-    />
+    <!-- 
+      CSP relaxed for development mode to allow Vite HMR style injection
+      Production build will use stricter CSP via Electron's session.defaultSession.webRequest
+    -->
     <title>Zenoter - Note Taking for Developers</title>
     <link rel="stylesheet" href="/main.css" />
     <!-- theme.css loaded here for initial render; Vite bundles it from main.tsx import -->

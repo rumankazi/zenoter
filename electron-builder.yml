@@ -1,0 +1,24 @@
+appId: com.rumankazi.zenoter
+productName: Zenoter
+directories:
+  output: dist
+  buildResources: build
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+  - '!node_modules'
+extraResources: []
+asar: true
+asarUnpack:
+  - node_modules/better-sqlite3/**/*
+nodeGypRebuild: false
+npmRebuild: false
+buildDependenciesFromSource: false
+win:
+  target:
+    - target: zip
+      arch:
+        - x64
+  artifactName: '${productName}-Setup-${version}.${ext}'
+  signAndEditExecutable: false

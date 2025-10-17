@@ -59,6 +59,15 @@ pnpm build || {
 echo "✅ Production build passed!"
 echo ""
 
+# 6.1. Verify build artifacts
+echo "🔍 Verifying build artifacts..."
+pnpm verify:build || {
+    echo "❌ Build artifact verification failed."
+    exit 1
+}
+echo "✅ Build artifacts verified!"
+echo ""
+
 # 7. E2E Tests (quick, only changed files)
 echo "🚀 Running E2E tests..."
 pnpm test:e2e || {

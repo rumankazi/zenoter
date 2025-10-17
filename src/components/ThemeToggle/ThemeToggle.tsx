@@ -33,7 +33,7 @@ export const ThemeToggle: FC = () => {
             initial={{ rotate: -90, scale: 0, opacity: 0 }}
             animate={{ rotate: 0, scale: 1, opacity: 1 }}
             exit={{ rotate: 90, scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.1, ease: 'easeInOut' }}
             className={styles.iconSvg}
             viewBox="0 0 24 24"
             fill="none"
@@ -50,7 +50,7 @@ export const ThemeToggle: FC = () => {
             initial={{ rotate: 90, scale: 0, opacity: 0 }}
             animate={{ rotate: 0, scale: 1, opacity: 1 }}
             exit={{ rotate: -90, scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.1, ease: 'easeInOut' }}
             className={styles.sunIconSvg}
             viewBox="0 0 24 24"
             fill="none"
