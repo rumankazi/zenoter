@@ -1,0 +1,66 @@
+name: Sync Release Branch
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sync main → release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Sync to release branch
+        run: |
+          # Fetch all branches
+          git fetch origin
+
+          # Create release branch if it doesn't exist
+          if ! git ls-remote --exit-code --heads origin release; then
+            echo "📝 Creating release branch from main"
+            git checkout -b release
+            git push origin release
+            echo "✅ Created release branch"
+          else
+            echo "📝 Syncing main → release"
+            git checkout release
+            
+            # Try to merge with conflict detection
+            if git merge origin/main --no-edit --no-ff -m "chore: sync main to release [skip ci]"; then
+              echo "✅ Clean merge successful"
+              git push origin release
+            else
+              echo "❌ Merge conflict detected!"
+              echo "Conflicts in:"
+              git status --short
+              
+              # Abort merge
+              git merge --abort
+              
+              # Strategy: Reset release to main (main is source of truth)
+              echo "🔄 Resetting release branch to main..."
+              git reset --hard origin/main
+              git push origin release --force
+              
+              echo "⚠️ Release branch was force-updated to match main"
+              echo "⚠️ Any release-only commits (version bumps, changelogs) were removed"
+              echo "⚠️ semantic-release will recreate them on next release"
+            fi
+          fi
+
+          echo "✅ Sync complete"
