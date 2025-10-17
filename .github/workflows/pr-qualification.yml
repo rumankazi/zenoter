@@ -26,7 +26,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
@@ -58,7 +58,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
@@ -81,7 +81,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
@@ -93,7 +93,7 @@ jobs:
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: false
           files: ./coverage/coverage-final.json
@@ -144,7 +144,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
@@ -174,7 +174,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
