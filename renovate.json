@@ -1,6 +1,152 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ]
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":enablePreCommit",
+    "group:allNonMajor",
+    "schedule:weekends"
+  ],
+  "timezone": "UTC",
+  "labels": ["dependencies", "renovate"],
+  "assignees": ["rumankazi"],
+  "reviewers": ["rumankazi"],
+  "prConcurrentLimit": 3,
+  "prCreation": "immediate",
+  "rebaseWhen": "behind-base-branch",
+  "platformAutomerge": true,
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "ignoreTests": false,
+  "minimumReleaseAge": "3 days",
+  "stabilityDays": 3,
+  "prBodyColumns": ["Package", "Type", "Update", "Change", "Pending"],
+  "prBodyDefinitions": {
+    "Age": "[![age](https://developer.mend.io/api/mc/badges/age/npm/{{depName}}/{{newVersion}}?slim=true)](https://docs.renovatebot.com/merge-confidence/)",
+    "Adoption": "[![adoption](https://developer.mend.io/api/mc/badges/adoption/npm/{{depName}}/{{newVersion}}?slim=true)](https://docs.renovatebot.com/merge-confidence/)",
+    "Passing": "[![passing](https://developer.mend.io/api/mc/badges/compatibility/npm/{{depName}}/{{currentVersion}}/{{newVersion}}?slim=true)](https://docs.renovatebot.com/merge-confidence/)",
+    "Confidence": "[![confidence](https://developer.mend.io/api/mc/badges/confidence/npm/{{depName}}/{{currentVersion}}/{{newVersion}}?slim=true)](https://docs.renovatebot.com/merge-confidence/)"
+  },
+  "prBodyNotes": [
+    "This PR was created by Renovate bot to keep dependencies up to date.",
+    "PRs that pass all qualification checks will be auto-merged."
+  ],
+  "packageRules": [
+    {
+      "description": "Group all non-major dependencies together",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch",
+      "automerge": true
+    },
+    {
+      "description": "Automerge dev dependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Major updates require manual review",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-update", "needs-review"]
+    },
+    {
+      "description": "Group Electron and related packages",
+      "matchPackagePatterns": ["^electron", "electron-builder"],
+      "groupName": "Electron",
+      "automerge": false
+    },
+    {
+      "description": "Group React and related packages",
+      "matchPackagePatterns": ["^react", "^@types/react"],
+      "groupName": "React",
+      "automerge": true
+    },
+    {
+      "description": "Group testing libraries",
+      "matchPackagePatterns": [
+        "^vitest",
+        "^@vitest",
+        "^@testing-library",
+        "^playwright",
+        "^@playwright"
+      ],
+      "groupName": "Testing",
+      "automerge": true
+    },
+    {
+      "description": "Group ESLint and related packages",
+      "matchPackagePatterns": ["^eslint", "^@eslint", "typescript-eslint"],
+      "groupName": "ESLint",
+      "automerge": true
+    },
+    {
+      "description": "Group TypeScript and related packages",
+      "matchPackagePatterns": ["^typescript", "^@types/"],
+      "groupName": "TypeScript",
+      "automerge": true
+    },
+    {
+      "description": "Group Vite and plugins",
+      "matchPackagePatterns": ["^vite", "^@vitejs"],
+      "groupName": "Vite",
+      "automerge": true
+    },
+    {
+      "description": "Group Framer Motion and animation libraries",
+      "matchPackagePatterns": ["framer-motion", "lottie"],
+      "groupName": "Animations",
+      "automerge": true
+    },
+    {
+      "description": "Group Emotion CSS-in-JS packages",
+      "matchPackagePatterns": ["^@emotion"],
+      "groupName": "Emotion",
+      "automerge": true
+    },
+    {
+      "description": "Group documentation tools",
+      "matchPackagePatterns": ["^vitepress", "^typedoc"],
+      "groupName": "Documentation",
+      "automerge": true,
+      "matchPaths": ["docs/package.json"]
+    },
+    {
+      "description": "Pin GitHub Actions to specific versions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "automerge": true,
+      "groupName": "GitHub Actions"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "urgent"],
+    "automerge": false,
+    "assignees": ["rumankazi"],
+    "reviewers": ["rumankazi"]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "rangeStrategy": "bump",
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "commitMessageSuffix": "",
+  "branchPrefix": "renovate/",
+  "branchConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "postUpdateOptions": ["pnpmDedupe"],
+  "pnpm": {
+    "enabled": true
+  }
 }
