@@ -16,29 +16,26 @@ function processApiDocs() {
 
   // Process TypeDoc markdown files
   const files = fs.readdirSync(apiDir);
-  
-  files.forEach(file => {
+
+  files.forEach((file) => {
     if (file.endsWith('.md')) {
       let content = fs.readFileSync(path.join(apiDir, file), 'utf-8');
-      
+
       // Add VitePress frontmatter
       content = `---
 title: ${file.replace('.md', '')}
 ---
 
 ${content}`;
-      
+
       // Write to output directory
-      fs.writeFileSync(
-        path.join(outputDir, file),
-        content
-      );
+      fs.writeFileSync(path.join(outputDir, file), content);
     }
   });
 
   // Clean up temp directory
   fs.rmSync(apiDir, { recursive: true, force: true });
-  
+
   console.log('✅ API documentation processed successfully');
 }
 
