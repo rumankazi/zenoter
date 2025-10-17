@@ -1,6 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "group:monorepos", ":automergeMinor", ":automergePatch"],
+  "node": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "description": "Group all GitHub Actions updates together",
