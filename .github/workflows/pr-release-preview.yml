@@ -27,7 +27,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
@@ -139,13 +138,13 @@ jobs:
           else
             # Determine emoji and installer info
             if [ "$RELEASE_TYPE" = "major" ]; then
-              EMOJI="�"
+              EMOJI="💥"
               INSTALLER="+ Windows Installer 📦"
             elif [ "$RELEASE_TYPE" = "minor" ]; then
               EMOJI="✨"
               INSTALLER="(no installer)"
             else
-              EMOJI="�"
+              EMOJI="🐛"
               INSTALLER="(no installer)"
             fi
             
@@ -209,21 +208,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          # Find existing release preview comment
-          EXISTING_COMMENT=$(gh pr view "$PR_NUMBER" --json comments --jq '
-            .comments[] | 
-            select(.author.login == "github-actions" and (.body | contains("🚀 Release Preview"))) | 
-            .id
-          ' || echo "")
+          # Find existing release preview comment ID
+          EXISTING_COMMENT=$(gh pr view "$PR_NUMBER" --json comments \
+            --jq '.comments[] | select(.author.login == "github-actions" and (.body | contains("🚀 Release Preview"))) | .id' \
+            | head -1)
 
           if [ -n "$EXISTING_COMMENT" ]; then
-            # Update existing comment
-            gh api \
-              --method PATCH \
-              -H "Accept: application/vnd.github+json" \
-              "/repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT" \
-              -f body="@${{ steps.generate.outputs.comment_file }}"
-            echo "✅ Updated existing release preview comment"
+            # Update existing comment using gh CLI
+            gh issue comment "$EXISTING_COMMENT" --edit --body-file "${{ steps.generate.outputs.comment_file }}"
+            echo "✅ Updated existing release preview comment #$EXISTING_COMMENT"
           else
             # Create new comment
             gh pr comment "$PR_NUMBER" --body-file "${{ steps.generate.outputs.comment_file }}"
