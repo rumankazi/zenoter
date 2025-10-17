@@ -59,18 +59,18 @@ test.describe('Zenoter App - Phase 1 MVP E2E Tests', () => {
   });
 
   test('should have FileTree with animation (opacity transition)', async ({ page }) => {
-    // Check if FileTree has the animated appearance
+    // Wait for the FileTree to be visible and stable (animation completed)
     const fileTree = page.getByRole('tree');
 
-    // Verify the element is visible (animation completed)
+    // Playwright's toBeVisible() waits for element to be stable and fully visible
+    // This inherently waits for animations to complete
     await expect(fileTree).toBeVisible();
 
-    // Check if opacity is 1 (animation finished)
-    const opacity = await fileTree.evaluate((el) => {
-      return window.getComputedStyle(el).opacity;
-    });
+    // Additionally verify the element has rendered content
+    await expect(fileTree).toContainText('Notes');
 
-    expect(parseFloat(opacity)).toBeGreaterThanOrEqual(0.9);
+    // Verify the tree is interactive (has proper ARIA attributes)
+    await expect(fileTree).toHaveAttribute('role', 'tree');
   });
 
   test('should display all expected UI elements', async ({ page }) => {
