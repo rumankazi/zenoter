@@ -192,7 +192,11 @@ jobs:
           files: |
             dist/*.exe
             dist/*.zip
+          append_body: true
           body: |
+
+            ---
+
             ## 📦 Installation
 
             ### Windows Installer

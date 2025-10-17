@@ -97,7 +97,11 @@ jobs:
           files: |
             dist/*.exe
             dist/*.zip
+          append_body: true
           body: |
+
+            ---
+
             ## 📦 Installation
 
             ### Windows
@@ -112,6 +116,6 @@ jobs:
 
             ---
 
-            See full release notes below ⬇️
+            **See full release notes above** ⬆️
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
