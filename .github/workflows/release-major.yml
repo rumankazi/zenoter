@@ -1,0 +1,224 @@
+name: Create Major Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Major version to release (e.g., 2.0.0, 3.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Additional release notes (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Validate Version
+    runs-on: ubuntu-latest
+    outputs:
+      is_valid: ${{ steps.check.outputs.is_valid }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate version format
+        id: check
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Version must be in format: X.Y.Z (e.g., 2.0.0)"
+            exit 1
+          fi
+
+          # Extract major version
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+
+          # Get current version from package.json
+          CURRENT=$(grep -Po '"version": *"\K[^"]*' package.json)
+          CURRENT_MAJOR=$(echo $CURRENT | cut -d. -f1)
+
+          if [ "$MAJOR" -le "$CURRENT_MAJOR" ]; then
+            echo "❌ Major version $MAJOR must be greater than current major version $CURRENT_MAJOR"
+            exit 1
+          fi
+
+          echo "✅ Version $VERSION is valid"
+          echo "is_valid=true" >> $GITHUB_OUTPUT
+
+  create-release:
+    name: Create Major Release
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.create_tag.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Update version in package.json
+        run: |
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          pnpm install --lockfile-only
+
+      - name: Generate CHANGELOG
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+
+          # Get commits since last release
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --oneline --pretty=format:"- %s" main)
+          else
+            COMMITS=$(git log --oneline --pretty=format:"- %s" $LAST_TAG..main)
+          fi
+
+          # Prepend to CHANGELOG
+          {
+            echo "# Changelog"
+            echo ""
+            echo "## [$VERSION] - $DATE"
+            echo ""
+            echo "### 💥 Breaking Changes"
+            echo ""
+            echo "${{ github.event.inputs.release_notes }}"
+            echo ""
+            echo "### Changes"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            if [ -f CHANGELOG.md ]; then
+              tail -n +2 CHANGELOG.md
+            fi
+          } > CHANGELOG.tmp
+          mv CHANGELOG.tmp CHANGELOG.md
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add package.json pnpm-lock.yaml CHANGELOG.md
+          git commit -m "chore(release): ${{ github.event.inputs.version }} [skip ci]"
+          git push
+
+      - name: Create and push tag
+        id: create_tag
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.create_tag.outputs.version }}
+          name: v${{ steps.create_tag.outputs.version }}
+          body: |
+            ## 💥 Major Release v${{ steps.create_tag.outputs.version }}
+
+            ${{ github.event.inputs.release_notes }}
+
+            ### What's Changed
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for full details.
+
+            ### 📦 Installation Instructions
+            Download the appropriate installer below and follow the installation guide.
+
+            **Note:** Installers will be attached shortly...
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-installers:
+    name: Build Windows Installer
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: v${{ needs.create-release.outputs.release_version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Build Windows installer
+        run: pnpm dist:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.create-release.outputs.release_version }}
+          files: |
+            dist/*.exe
+            dist/*.zip
+          body: |
+            ## 📦 Installation
+
+            ### Windows Installer
+            1. Download `Zenoter-Setup-${{ needs.create-release.outputs.release_version }}.exe`
+            2. Run the installer
+            3. Follow the installation wizard
+            4. Launch Zenoter from Start Menu
+
+            ### Portable Version
+            1. Download `Zenoter-${{ needs.create-release.outputs.release_version }}-win.zip`
+            2. Extract to your preferred location
+            3. Run `Zenoter.exe`
+
+            ### 🔄 Auto-Update
+            Future updates will be delivered automatically through the app.
+
+            ---
+
+            **System Requirements:**
+            - Windows 10/11 (64-bit)
+            - 4GB RAM minimum
+            - 500MB free disk space
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify completion
+        run: |
+          echo "🎉 Major release v${{ needs.create-release.outputs.release_version }} completed!"
+          echo "✅ Windows installer built and uploaded"
