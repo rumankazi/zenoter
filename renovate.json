@@ -1,4 +1,41 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": ["config:recommended", "group:monorepos", ":automergeMinor", ":automergePatch"],
+  "packageRules": [
+    {
+      "description": "Group all GitHub Actions updates together",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Group pnpm versions together",
+      "matchPackageNames": ["pnpm"],
+      "groupName": "pnpm",
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Group all patch updates together",
+      "matchUpdateTypes": ["patch"],
+      "groupName": "patch dependencies",
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Automerge minor devDependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Group linters and formatters together",
+      "matchPackageNames": ["/eslint/", "/prettier/", "/@typescript-eslint/"],
+      "groupName": "linters",
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ]
 }
