@@ -23,6 +23,7 @@ build/
 # Electron
 out/
 electron-dist/
+dist-electron/
 
 # Testing
 coverage/

@@ -7,6 +7,7 @@ export default tseslint.config(
     ignores: [
       'dist/**',
       'dist-ssr/**',
+      'dist-electron/**',
       'out/**',
       'electron-dist/**',
       'build/**',
@@ -34,6 +35,13 @@ export default tseslint.config(
         },
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+  {
+    // Special rules for Electron preload scripts (need CommonJS)
+    files: ['electron/preload/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   }
 );
