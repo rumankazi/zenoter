@@ -1,19 +1,49 @@
-# Run type checking and tests before push
-echo "🔍 Running pre-push checks..."
+echo "🔍 Running pre-push qualification checks..."
+echo ""
 
-echo "📝 Type checking..."
+# 1. ESLint
+echo "📋 Running ESLint..."
+pnpm lint || {
+    echo "❌ ESLint failed. Run 'pnpm lint:fix' to auto-fix."
+    exit 1
+}
+echo "✅ ESLint passed!"
+echo ""
+
+# 2. Prettier
+echo "� Checking code formatting..."
+pnpm format:check || {
+    echo "❌ Prettier check failed. Run 'pnpm format' to auto-fix."
+    exit 1
+}
+echo "✅ Prettier passed!"
+echo ""
+
+# 3. TypeScript
+echo "� Type checking..."
 pnpm typecheck || {
-    echo "❌ Type check failed. Please fix TypeScript errors before pushing."
+    echo "❌ Type check failed. Please fix TypeScript errors."
     exit 1
 }
-
 echo "✅ Type check passed!"
+echo ""
 
-echo "🧪 Running tests..."
-pnpm vitest run || {
-    echo "❌ Tests failed. Please fix failing tests before pushing."
+# 4. Tests with coverage
+echo "🧪 Running tests with coverage..."
+pnpm vitest run --coverage || {
+    echo "❌ Tests failed. Please fix failing tests or coverage."
     exit 1
 }
+echo "✅ All tests passed with coverage!"
+echo ""
 
-echo "✅ All tests passed!"
-echo "🚀 Ready to push!"
+# 5. Build
+echo "🏗️  Verifying build..."
+pnpm build || {
+    echo "❌ Build failed. Please fix build errors."
+    exit 1
+}
+echo "✅ Build passed!"
+echo ""
+
+echo "🚀 All pre-push checks passed! Ready to push!"
