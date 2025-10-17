@@ -186,7 +186,7 @@ jobs:
             COMMENT+="---"$'\n\n'
             COMMENT+="### 📋 Release Process"$'\n\n'
             COMMENT+="1. PR merged to \`main\`"$'\n'
-            COMMENT+="2. Auto-sync workflow: \`main\` → \`release\`"$'\n'
+            COMMENT+="2. Auto-sync: \`main\` → \`release\` branch"$'\n'
             COMMENT+="3. semantic-release creates \`v${NEW_VERSION}\`"$'\n'
             
             if [ "$RELEASE_TYPE" = "major" ]; then
