@@ -10,7 +10,7 @@ pnpm typecheck || {
 echo "✅ Type check passed!"
 
 echo "🧪 Running tests..."
-pnpm test --run || {
+pnpm vitest run || {
     echo "❌ Tests failed. Please fix failing tests before pushing."
     exit 1
 }
