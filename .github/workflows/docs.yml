@@ -57,10 +57,11 @@ jobs:
           cp PLAN.md docs/roadmap-full.md
           cp README.md docs/guide/introduction.md
 
-      - name: Generate API documentation
-        run: |
-          cd docs
-          pnpm run generate-api-docs
+      # TODO: Re-enable API docs generation in Phase 2+ when we have more components
+      # - name: Generate API documentation
+      #   run: |
+      #     cd docs
+      #     pnpm run generate-api-docs
 
       - name: Build documentation
         run: |
