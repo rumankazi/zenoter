@@ -1,0 +1,67 @@
+name: Validate Release (Dry Run)
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to test'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  dry-run:
+    name: Semantic Release Dry Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # Use branch from input or PR head
+          ref: ${{ github.event.inputs.branch || github.head_ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run semantic-release (dry-run)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: |
+          echo "🔍 Running semantic-release in dry-run mode..."
+          echo "📋 This will show what WOULD happen without making any changes"
+          echo ""
+          pnpm exec semantic-release --dry-run --debug
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "✅ Dry run complete!"
+          echo ""
+          echo "Check the logs above to see:"
+          echo "  • What version would be released"
+          echo "  • What commits would be included"
+          echo "  • What changes would be made"
+          echo "  • Any errors that would occur"
