@@ -3,7 +3,7 @@
 **Last Updated**: 2025-10-17  
 **Status**: ✅ Production Ready
 
-## ��� Overview
+## 🎯 Overview
 
 Zenoter uses **semantic-release** with a **dedicated release branch** to enable full branch protection on `main` while automating releases.
 
@@ -16,7 +16,7 @@ Zenoter uses **semantic-release** with a **dedicated release branch** to enable 
 - ✅ **Simple & clean** - 2 workflows, easy to understand
 - ✅ **Industry standard** - Same pattern used by React, Babel, etc.
 
-## ��� Branch Strategy
+## 🌿 Branch Strategy
 
 ### Structure
 
@@ -43,7 +43,7 @@ release (UNPROTECTED - automation only)
 | **History**         | Version commits in main | Clean main, versions isolated           |
 | **Best practice**   | Non-standard            | Industry standard                       |
 
-## ��� Release Types
+## 📦 Release Types
 
 | Type      | Version Change | Trigger                        | Artifacts           |
 | --------- | -------------- | ------------------------------ | ------------------- |
@@ -51,7 +51,7 @@ release (UNPROTECTED - automation only)
 | **Minor** | 0.1.0 → 0.2.0  | `feat:`                        | Release only        |
 | **Patch** | 0.1.0 → 0.1.1  | `fix:`                         | Release only        |
 
-## ��� How It Works
+## 🤖 How It Works
 
 1. Merge PR to `main` → triggers sync workflow
 2. Sync copies `main` to `release` branch
@@ -61,7 +61,7 @@ release (UNPROTECTED - automation only)
 
 ⚠️ **Warning**: Even `BREAKING CHANGE: none` triggers a major release!
 
-## ��� Setup
+## 🔧 Setup
 
 ### Branch Protection
 
