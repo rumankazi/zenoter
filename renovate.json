@@ -113,7 +113,7 @@
       "matchPackagePatterns": ["^vitepress", "^typedoc"],
       "groupName": "Documentation",
       "automerge": true,
-      "matchPaths": ["docs/package.json"]
+      "matchFileNames": ["docs/package.json"]
     },
     {
       "description": "Pin GitHub Actions to specific versions",
@@ -123,13 +123,6 @@
       "groupName": "GitHub Actions"
     }
   ],
-  "vulnerabilityAlerts": {
-    "enabled": true,
-    "labels": ["security", "urgent"],
-    "automerge": false,
-    "assignees": ["rumankazi"],
-    "reviewers": ["rumankazi"]
-  },
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true,
