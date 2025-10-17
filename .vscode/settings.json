@@ -1,0 +1,17 @@
+{
+  "github.copilot.advanced": {
+    "projectContext": {
+      "includeFiles": [
+        ".github/copilot-instructions.md",
+        "ARCHITECTURE.md",
+        "package.json",
+        "tsconfig.json"
+      ]
+    }
+  },
+  "github.copilot.enable": {
+    "*": true,
+    "markdown": true,
+    "scm": true
+  }
+}

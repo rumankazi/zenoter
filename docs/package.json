@@ -1,0 +1,19 @@
+{
+  "name": "zenoter-docs",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Zenoter Documentation",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "deploy": "sh deploy.sh",
+    "generate-api-docs": "typedoc --out temp-api ../src && node scripts/process-api-docs.js"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.13",
+    "typedoc": "^0.28.3",
+    "typedoc-plugin-markdown": "^4.9.0"
+  }
+}

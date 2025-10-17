@@ -1,0 +1,83 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'src/**/*.ts' # Rebuild docs when code changes
+      - 'ARCHITECTURE.md'
+      - 'PLAN.md'
+      - 'README.md'
+  pull_request:
+    paths:
+      - 'docs/**'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for git info
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Install dependencies
+        run: |
+          cd docs
+          npm ci
+
+      - name: Copy architecture docs
+        run: |
+          # Copy development docs to documentation site
+          cp ARCHITECTURE.md docs/development/architecture-full.md
+          cp PLAN.md docs/roadmap-full.md
+          cp README.md docs/guide/introduction.md
+
+      - name: Generate API documentation
+        run: |
+          cd docs
+          npm run generate-api-docs
+
+      - name: Build documentation
+        run: |
+          cd docs
+          npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy Documentation
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3

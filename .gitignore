@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-debug.log*
+
+# Production
+dist/
+dist-ssr/
+*.local
+build/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Electron
+out/
+electron-dist/
+
+# Testing
+coverage/
+*.log
+test-results/
+playwright-report/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.sqlite
+*.sqlite-journal
+zenoter.db
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Documentation build
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/temp-api/

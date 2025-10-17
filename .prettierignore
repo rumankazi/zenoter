@@ -1,0 +1,17 @@
+# Ignore build outputs
+dist
+dist-ssr
+out
+electron-dist
+build
+coverage
+
+# Ignore dependencies
+node_modules
+pnpm-lock.yaml
+
+# Ignore auto-generated files
+*.log
+.vitepress/dist
+.vitepress/cache
+temp-api

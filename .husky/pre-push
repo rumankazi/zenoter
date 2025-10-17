@@ -1,0 +1,19 @@
+# Run type checking and tests before push
+echo "🔍 Running pre-push checks..."
+
+echo "📝 Type checking..."
+pnpm typecheck || {
+    echo "❌ Type check failed. Please fix TypeScript errors before pushing."
+    exit 1
+}
+
+echo "✅ Type check passed!"
+
+echo "🧪 Running tests..."
+pnpm test --run || {
+    echo "❌ Tests failed. Please fix failing tests before pushing."
+    exit 1
+}
+
+echo "✅ All tests passed!"
+echo "🚀 Ready to push!"
