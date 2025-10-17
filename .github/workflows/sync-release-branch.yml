@@ -41,7 +41,7 @@ jobs:
             git checkout -B release origin/release
             
             # Try to merge with conflict detection
-            if git merge origin/main --no-edit --no-ff -m "chore: sync main to release [skip ci]"; then
+            if git merge origin/main --no-edit --no-ff -m "chore: sync main to release"; then
               echo "✅ Clean merge successful"
               git push origin release
             else
