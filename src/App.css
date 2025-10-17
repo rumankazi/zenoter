@@ -1,6 +1,6 @@
 /**
  * App-level styles
- * Phase 1 - Basic styling
+ * Phase 1 - Basic styling with theme support
  */
 
 * {
@@ -22,8 +22,23 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+h1 {
+  color: var(--color-text);
+  margin: 0;
+}
+
+p {
+  color: var(--color-text-secondary);
+  margin: 0.5rem 0;
 }

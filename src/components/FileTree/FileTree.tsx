@@ -17,6 +17,7 @@ export const FileTree: FC = () => {
         padding: '1rem',
         height: '100%',
         overflow: 'auto',
+        color: 'var(--color-text)',
       }}
     >
       <div role="treeitem" aria-expanded="true">

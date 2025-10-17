@@ -29,12 +29,14 @@ export const FeatureFlagDemo = () => {
       {...fadeIn}
       style={{
         padding: '20px',
-        border: '1px solid #ddd',
+        border: '1px solid var(--color-border)',
         borderRadius: '8px',
         fontFamily: 'system-ui, sans-serif',
+        backgroundColor: 'var(--color-surface)',
+        color: 'var(--color-text)',
       }}
     >
-      <h2>🚩 Feature Flags Demo</h2>
+      <h2 style={{ color: 'var(--color-text)' }}>🚩 Feature Flags Demo</h2>
 
       <section style={{ marginTop: '20px' }}>
         <h3>✅ Enabled Features ({enabledFeatures.length})</h3>
@@ -85,15 +87,22 @@ export const FeatureFlagDemo = () => {
         style={{
           marginTop: '20px',
           padding: '15px',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: 'var(--color-background)',
           borderRadius: '4px',
         }}
       >
-        <h3>🧪 Usage Examples</h3>
+        <h3 style={{ color: 'var(--color-text)' }}>🧪 Usage Examples</h3>
 
         {/* Example 1: Conditional rendering */}
         <div style={{ marginBottom: '15px' }}>
-          <code style={{ backgroundColor: '#fff', padding: '4px 8px', borderRadius: '3px' }}>
+          <code
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              padding: '4px 8px',
+              borderRadius: '3px',
+              color: 'var(--color-text)',
+            }}
+          >
             useFeatureFlag('CLOUD_SYNC')
           </code>
           {hasCloudSync ? (
@@ -105,7 +114,14 @@ export const FeatureFlagDemo = () => {
 
         {/* Example 2: Another conditional feature */}
         <div>
-          <code style={{ backgroundColor: '#fff', padding: '4px 8px', borderRadius: '3px' }}>
+          <code
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              padding: '4px 8px',
+              borderRadius: '3px',
+              color: 'var(--color-text)',
+            }}
+          >
             useFeatureFlag('DARK_MODE')
           </code>
           {hasDarkMode ? (
