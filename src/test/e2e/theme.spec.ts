@@ -23,7 +23,11 @@ test.describe('Theme System E2E', () => {
 
     // Click to toggle
     await themeToggle.click();
-    await page.waitForTimeout(300); // Wait for animation
+    // Wait for aria-label to change
+    await page.waitForFunction((initial) => {
+      const button = document.querySelector('[data-testid="theme-toggle"]');
+      return button?.getAttribute('aria-label') !== initial;
+    }, initialLabel);
 
     // Check label changed
     const newLabel = await themeToggle.getAttribute('aria-label');
@@ -31,7 +35,10 @@ test.describe('Theme System E2E', () => {
 
     // Click again to toggle back
     await themeToggle.click();
-    await page.waitForTimeout(300);
+    await page.waitForFunction((previous) => {
+      const button = document.querySelector('[data-testid="theme-toggle"]');
+      return button?.getAttribute('aria-label') !== previous;
+    }, newLabel);
 
     const finalLabel = await themeToggle.getAttribute('aria-label');
     expect(finalLabel).toBe(initialLabel);
@@ -48,7 +55,10 @@ test.describe('Theme System E2E', () => {
 
     // Toggle to opposite theme
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(
+      (initial) => document.documentElement.getAttribute('data-theme') !== initial,
+      initialTheme
+    );
 
     const newTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
 
@@ -58,7 +68,10 @@ test.describe('Theme System E2E', () => {
 
     // Toggle back
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(
+      (previous) => document.documentElement.getAttribute('data-theme') !== previous,
+      newTheme
+    );
 
     const finalTheme = await page.evaluate(() =>
       document.documentElement.getAttribute('data-theme')
@@ -69,9 +82,17 @@ test.describe('Theme System E2E', () => {
   test('should persist theme preference in localStorage', async ({ page }) => {
     const themeToggle = page.getByTestId('theme-toggle');
 
+    // Get initial theme
+    const initialTheme = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme')
+    );
+
     // Toggle theme
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(
+      (initial) => document.documentElement.getAttribute('data-theme') !== initial,
+      initialTheme
+    );
 
     // Check localStorage has a value
     const savedTheme = await page.evaluate(() => localStorage.getItem('zenoter-theme-mode'));
@@ -91,11 +112,29 @@ test.describe('Theme System E2E', () => {
     await expect(themeToggle).toBeVisible();
 
     // Click multiple times to test animation smoothness
+    let currentTheme = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme')
+    );
+
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(
+      (prev) => document.documentElement.getAttribute('data-theme') !== prev,
+      currentTheme
+    );
+
+    currentTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(
+      (prev) => document.documentElement.getAttribute('data-theme') !== prev,
+      currentTheme
+    );
+
+    currentTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
     await themeToggle.click();
+    await page.waitForFunction(
+      (prev) => document.documentElement.getAttribute('data-theme') !== prev,
+      currentTheme
+    );
 
     // Toggle should still be visible and functional
     await expect(themeToggle).toBeVisible();

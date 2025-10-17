@@ -4,6 +4,7 @@ import { FeatureFlagDemo } from './components/FeatureFlagDemo';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
+import styles from './App.module.css';
 
 /**
  * Main App component - Phase 1 MVP
@@ -12,40 +13,17 @@ import './App.css';
 export const App: FC = () => {
   return (
     <ThemeProvider>
-      <div
-        style={{
-          display: 'flex',
-          height: '100vh',
-          width: '100vw',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          backgroundColor: 'var(--color-background)',
-          color: 'var(--color-text)',
-        }}
-      >
-        <aside
-          style={{
-            width: '250px',
-            borderRight: '1px solid var(--color-border)',
-            background: 'var(--color-surface)',
-          }}
-        >
+      <div className={styles.appContainer}>
+        <aside className={styles.sidebar}>
           <FileTree />
         </aside>
-        <main
-          style={{
-            flex: 1,
-            padding: '2rem',
-            overflowY: 'auto',
-          }}
-        >
+        <main className={styles.mainContent}>
           <div>
             <h1>Zenoter - Phase 1 MVP</h1>
-            <p style={{ color: 'var(--color-text-secondary)' }}>
-              Modern note-taking app for developers
-            </p>
+            <p className={styles.subtitle}>Modern note-taking app for developers</p>
           </div>
 
-          <div style={{ marginTop: '40px' }}>
+          <div className={styles.demoSection}>
             <FeatureFlagDemo />
           </div>
         </main>

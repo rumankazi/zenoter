@@ -16,7 +16,10 @@ interface ThemeContextValue {
   /** Set the theme mode */
   setMode: (mode: ThemeMode) => void;
 
-  /** Toggle between modes: auto → light → dark → auto */
+  /**
+   * Toggle theme mode: switches between light and dark.
+   * If in auto mode, switches to the opposite of the current resolved theme.
+   */
   toggleTheme: () => void;
 }
 

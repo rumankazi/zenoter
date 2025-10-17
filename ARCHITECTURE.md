@@ -123,21 +123,31 @@ graph LR
 - MobX: More complex than necessary
 - Context API: Insufficient for complex state
 
-### Styling: Emotion (CSS-in-JS)
+### Styling: CSS Modules
 
 **Why we chose this:**
 
-- Runtime CSS generation enables dynamic theming
-- Excellent TypeScript support
-- Works well with Framer Motion
-- Enables component-scoped styling
-- Supports animation keyframes
+- **CSP Compliant**: No inline styles or runtime injection (unlike Emotion/styled-components)
+- Scoped styles prevent naming conflicts
+- TypeScript support via module declarations
+- Vite has built-in support (zero config)
+- Works seamlessly with CSS variables for theming
+- No runtime overhead or JavaScript bundle inflation
+- Compatible with strict Content Security Policy (`style-src 'self'`)
+
+**Why NOT CSS-in-JS (Emotion/styled-components):**
+
+- Violates CSP without `'unsafe-inline'` (security risk)
+- Runtime style injection causes performance overhead
+- Increases JavaScript bundle size
+- Conflicts with our strict security requirements
 
 **Alternatives considered:**
 
-- Styled Components: Similar but Emotion has better performance
-- Tailwind CSS: Less suitable for complex animations
-- CSS Modules: Limited dynamic styling capabilities
+- Emotion CSS-in-JS: CSP violations, runtime overhead
+- Styled Components: Same CSP issues as Emotion
+- Tailwind CSS: Less suitable for complex animations, harder to theme dynamically
+- Plain CSS: No scoping, naming conflicts
 
 ### Database
 
@@ -377,6 +387,11 @@ const CloudSyncButton = () => {
 - **Data Sanitization**: All markdown rendered with DOMPurify
 - **Electron Security**: Context isolation, disabled node integration in renderers
 - **API Security**: Rate limiting, JWT tokens, CORS properly configured
+- **Content Security Policy (CSP)**: Strict policy without `'unsafe-inline'`
+  - All styles in external CSS files (CSS Modules)
+  - No inline event handlers
+  - Scripts only from same origin
+  - CSP header: `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:;`
 
 ## Build and Deployment
 

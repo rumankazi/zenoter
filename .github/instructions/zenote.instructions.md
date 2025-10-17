@@ -41,7 +41,7 @@ This ensures continuity across sessions and different devices.
 - Editor: Monaco Editor
 - Animations: Framer Motion + Lottie
 - State: Zustand
-- Styling: Emotion CSS-in-JS
+- Styling: CSS Modules (NOT CSS-in-JS - see CSP requirements)
 - Database: SQLite (local), PostgreSQL (cloud - Phase 3+)
 - Testing: Vitest (unit/integration), Playwright (e2e)
 - Build: Vite
@@ -72,6 +72,7 @@ VERSION_CONTROL: false,
 5. **Follow accessibility guidelines (WCAG 2.1 AA)**
 6. **Implement feature flags for gradual rollout**
 7. **Keep infrastructure costs minimal until scaling needed**
+8. **CRITICAL: Maintain CSP compliance - NO inline styles or CSS-in-JS**
 
 ## Documentation Strategy
 
@@ -106,6 +107,44 @@ VERSION_CONTROL: false,
 - Feature flags for new functionality
 - Comments for complex logic
 
+## Styling Guidelines (CRITICAL FOR CSP)
+
+**ALWAYS use CSS Modules, NEVER inline styles or CSS-in-JS:**
+
+```tsx
+// ✅ CORRECT - CSS Modules
+import styles from './Component.module.css';
+export const Component = () => <div className={styles.container}>...</div>;
+
+// ❌ WRONG - Inline styles (violates CSP)
+export const Component = () => <div style={{ padding: '20px' }}>...</div>;
+
+// ❌ WRONG - Emotion/styled-components (violates CSP)
+import { css } from '@emotion/css';
+const container = css`
+  padding: 20px;
+`;
+```
+
+**Why CSS Modules:**
+
+- CSP compliant (no `'unsafe-inline'` needed)
+- Scoped styles (no naming conflicts)
+- TypeScript support via `src/types/css-modules.d.ts`
+- Works with CSS variables for theming
+- Zero runtime overhead
+
+**File naming**: `Component.module.css` (not `.css` or `.styles.ts`)
+
+**Theme integration**: Use CSS variables in module files
+
+```css
+.container {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+```
+
 ## Animation Standards
 
 ```typescript
@@ -116,6 +155,28 @@ const fadeIn = {
   transition: { type: 'spring', stiffness: 300 },
 };
 ```
+
+## Accessibility Requirements
+
+**ALWAYS include proper ARIA attributes:**
+
+```tsx
+// ✅ Toggle buttons need aria-pressed
+<button aria-pressed={isActive} onClick={toggle}>...</button>
+
+// ✅ Icon buttons need aria-label
+<button aria-label="Close dialog" onClick={close}>✕</button>
+
+// ✅ Semantic HTML first
+<nav aria-label="Main navigation">...</nav>
+```
+
+**Testing for accessibility:**
+
+- All interactive elements must be keyboard accessible
+- Test with `tab` key navigation
+- Verify screen reader announcements (aria-label, aria-pressed, etc.)
+- Color contrast must meet WCAG AA standards
 
 ## Current Sprint Focus
 
@@ -166,6 +227,37 @@ const fadeIn = {
 - Write test first, then implement
 - Use descriptive test names
 - Include edge cases
+
+**CRITICAL Testing Best Practices:**
+
+```typescript
+// ✅ CORRECT - Deterministic waiting in E2E tests
+await page.waitForFunction(
+  (expected) => document.querySelector('[data-testid="btn"]')?.textContent === expected,
+  'Click me'
+);
+
+// ❌ WRONG - Fixed timeouts (flaky tests)
+await page.waitForTimeout(500);
+
+// ✅ CORRECT - Clean test output (no console.log)
+test('should update state', async () => {
+  // Test logic without console.log
+});
+
+// ❌ WRONG - Console.log in tests (clutters CI)
+test('should update state', async () => {
+  console.log('Initial state:', state);
+});
+
+// ✅ CORRECT - Use global mocks from setup.ts
+// No need to mock matchMedia in individual tests
+
+// ❌ WRONG - Duplicate mocks
+beforeEach(() => {
+  window.matchMedia = vi.fn(); // Already in setup.ts
+});
+```
 
 ## File Naming Conventions
 
@@ -319,19 +411,26 @@ const Feature = () => {
 - Skip writing tests
 - Add cloud features in Phase 1
 - Ignore accessibility
-- Use inline styles
+- **Use inline styles or CSS-in-JS (CSP violation)**
+- **Use fixed timeouts in E2E tests (flaky)**
+- **Add console.log statements to tests**
 - Commit without running tests
 - Add heavy dependencies without discussion
+- Duplicate mocks that exist in setup.ts
 
 ## ALWAYS
 
 - Write tests first
+- Use CSS Modules (never inline styles or CSS-in-JS)
+- Add ARIA attributes for accessibility (aria-label, aria-pressed, etc.)
+- Use deterministic waiting in E2E tests (never fixed timeouts)
+- Remove console.log from tests before committing
 - Use feature flags for new features
 - Add animations to interactions
 - Handle errors gracefully
 - Document complex logic
 - Consider performance impact
-- Check bundle size impact
+- Verify CSP compliance (no 'unsafe-inline' needed)
 
 ---
 
