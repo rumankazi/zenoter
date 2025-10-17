@@ -215,10 +215,12 @@ jobs:
 
           if [ -n "$EXISTING_COMMENT" ]; then
             # Update existing comment using gh CLI
+            echo "Updating existing release preview comment..."
             gh issue comment "$EXISTING_COMMENT" --edit --body-file "${{ steps.generate.outputs.comment_file }}"
             echo "✅ Updated existing release preview comment #$EXISTING_COMMENT"
           else
             # Create new comment
+            echo "Creating new release preview comment..."
             gh pr comment "$PR_NUMBER" --body-file "${{ steps.generate.outputs.comment_file }}"
             echo "✅ Created new release preview comment"
           fi
