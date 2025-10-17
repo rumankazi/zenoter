@@ -102,8 +102,23 @@ test.describe('Layout Structure E2E Tests', () => {
     await expect(sidebar).toBeVisible();
     await expect(fileTree).toBeVisible();
 
-    // Wait for Framer Motion animations to complete
-    await page.waitForTimeout(500);
+    // Wait for Framer Motion animations to complete (deterministic)
+    await page.waitForFunction(
+      ([sidebarSelector, fileTreeSelector]) => {
+        const sidebar = document.querySelector(sidebarSelector);
+        const fileTree = document.querySelector(fileTreeSelector);
+        if (!sidebar || !fileTree) return false;
+        const sidebarBox = sidebar.getBoundingClientRect();
+        const treeBox = fileTree.getBoundingClientRect();
+        // FileTree should be inside sidebar bounds (with tolerance for animations)
+        return (
+          treeBox.x >= sidebarBox.x - 1 &&
+          treeBox.x + treeBox.width <= sidebarBox.x + sidebarBox.width + 5 &&
+          treeBox.y >= sidebarBox.y - 10
+        );
+      },
+      ['aside', '[role="tree"][aria-label="File tree navigation"]']
+    );
 
     const sidebarBox = await sidebar.boundingBox();
     const treeBox = await fileTree.boundingBox();
@@ -185,7 +200,12 @@ test.describe('Layout Structure E2E Tests', () => {
 
     // Resize viewport
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.waitForTimeout(100); // Allow layout to update
+
+    // Wait for layout to adjust (deterministic)
+    await page.waitForFunction((expectedWidth) => {
+      const main = document.querySelector('main');
+      return main && main.getBoundingClientRect().width > expectedWidth;
+    }, 1600);
 
     // Re-check layout
     sidebarBox = await sidebar.boundingBox();

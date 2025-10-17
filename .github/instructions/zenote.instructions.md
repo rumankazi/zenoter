@@ -270,6 +270,15 @@ await page.waitForFunction(
   'Click me'
 );
 
+// ✅ CORRECT - Wait for element dimensions to match expected state
+await page.waitForFunction(
+  (selector) => {
+    const el = document.querySelector(selector);
+    return el && el.getBoundingClientRect().width > 1600;
+  },
+  'main'
+);
+
 // ❌ WRONG - Fixed timeouts (flaky tests)
 await page.waitForTimeout(500);
 
@@ -282,6 +291,17 @@ test('should update state', async () => {
 test('should update state', async () => {
   console.log('Initial state:', state);
 });
+
+// ✅ CORRECT - Bash glob file checks (CI/CD workflows)
+if ! ls dist/*.exe >/dev/null 2>&1; then
+  echo "No .exe files found"
+  exit 1
+fi
+
+// ❌ WRONG - [ -f ] with glob patterns (doesn't work)
+if [ ! -f dist/*.exe ]; then  # This fails with multiple matches
+  exit 1
+fi
 
 // ✅ CORRECT - Use global mocks from setup.ts
 // No need to mock matchMedia in individual tests

@@ -49,13 +49,13 @@ jobs:
         run: |
           echo "🔍 Checking for build artifacts..."
 
-          if [ ! -f dist/*.exe ]; then
+          if ! ls dist/*.exe >/dev/null 2>&1; then
             echo "❌ ERROR: No .exe installer found!"
             echo "can-build=false" >> $GITHUB_OUTPUT
             exit 1
           fi
 
-          if [ ! -f dist/*.zip ]; then
+          if ! ls dist/*.zip >/dev/null 2>&1; then
             echo "❌ ERROR: No .zip archive found!"
             echo "can-build=false" >> $GITHUB_OUTPUT
             exit 1
