@@ -207,17 +207,37 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
         run: |
-          # Find existing release preview comment ID
+          # Find existing release preview comment (use text without emoji for reliability)
           EXISTING_COMMENT=$(gh pr view "$PR_NUMBER" --json comments \
-            --jq '.comments[] | select(.author.login == "github-actions" and (.body | contains("🚀 Release Preview"))) | .id' \
+            --jq '.comments[] | select(.author.login == "github-actions" and (.body | contains("Release Preview"))) | .id' \
             | head -1)
 
           if [ -n "$EXISTING_COMMENT" ]; then
-            # Update existing comment using gh CLI
-            echo "Updating existing release preview comment ${EXISTING_COMMENT}..."
-            gh issue comment "$EXISTING_COMMENT" --edit-last --body-file "${{ steps.generate.outputs.comment_file }}"
-            echo "✅ Updated existing release preview comment #$EXISTING_COMMENT"
+            echo "Found existing release preview comment: $EXISTING_COMMENT"
+            
+            # Get numeric comment ID via GraphQL
+            COMMENT_DB_ID=$(gh api graphql -f query='
+              query($nodeId: ID!) {
+                node(id: $nodeId) {
+                  ... on IssueComment {
+                    databaseId
+                  }
+                }
+              }
+            ' -f nodeId="$EXISTING_COMMENT" --jq '.data.node.databaseId')
+            
+            if [ -n "$COMMENT_DB_ID" ]; then
+              echo "Updating comment #$COMMENT_DB_ID..."
+              gh api "repos/$REPO/issues/comments/$COMMENT_DB_ID" \
+                -X PATCH \
+                -F body=@"${{ steps.generate.outputs.comment_file }}"
+              echo "✅ Updated release preview comment"
+            else
+              echo "⚠️ Could not get numeric ID, creating new comment instead"
+              gh pr comment "$PR_NUMBER" --body-file "${{ steps.generate.outputs.comment_file }}"
+            fi
           else
             # Create new comment
             echo "Creating new release preview comment..."
