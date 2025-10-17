@@ -14,7 +14,16 @@ pnpm lint-staged || {
 echo "✅ Lint-staged passed!"
 echo ""
 
-# 2. TypeScript
+# 2: Lint all
+echo "🧹 Running full lint check..."
+pnpm lint || {
+    echo "❌ Lint check failed. Please fix linting errors."
+    exit 1
+}
+echo "✅ Lint check passed!"
+echo ""
+
+# 3. TypeScript
 echo "🔷 Type checking..."
 pnpm typecheck || {
     echo "❌ Type check failed. Please fix TypeScript errors."
@@ -23,7 +32,7 @@ pnpm typecheck || {
 echo "✅ Type check passed!"
 echo ""
 
-# 3. prettier format check
+# 4. Prettier format check
 echo "🎨 Checking code formatting with Prettier..."
 pnpm format:check || {
     echo "❌ Prettier format check failed. Please format your code with Prettier."
@@ -32,7 +41,7 @@ pnpm format:check || {
 echo "✅ Prettier format check passed!"
 echo ""
 
-# 4. Unit Tests (with coverage)
+# 5. Unit Tests (with coverage)
 echo "🧪 Running unit tests with coverage..."
 pnpm test:coverage -- --run || {
     echo "❌ Tests failed. Please fix failing tests."
@@ -41,7 +50,7 @@ pnpm test:coverage -- --run || {
 echo "✅ All tests passed!"
 echo ""
 
-# 5. Electron compile (ensure electron code compiles)
+# 6. Electron compile (ensure electron code compiles)
 echo "⚡ Verifying Electron compilation..."
 pnpm electron:compile || {
     echo "❌ Electron compilation failed. Please fix errors."
@@ -50,7 +59,7 @@ pnpm electron:compile || {
 echo "✅ Electron compilation passed!"
 echo ""
 
-# 6. Build (ensure production build works)
+# 7. Build (ensure production build works)
 echo "🏗️  Verifying production build..."
 pnpm build || {
     echo "❌ Production build failed. Please fix build errors."
@@ -59,7 +68,7 @@ pnpm build || {
 echo "✅ Production build passed!"
 echo ""
 
-# 6.1. Verify build artifacts
+# 8.1 Verify build artifacts
 echo "🔍 Verifying build artifacts..."
 pnpm verify:build || {
     echo "❌ Build artifact verification failed."

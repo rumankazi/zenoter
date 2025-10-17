@@ -59,7 +59,10 @@ app.whenReady().then(() => {
   // Reference: VS Code implementation in src/vs/code/electron-main/app.ts
 
   session.defaultSession.webRequest.onHeadersReceived(
-    (details: any, callback: (response: any) => void) => {
+    (
+      details: Electron.OnHeadersReceivedListenerDetails,
+      callback: (response: Electron.HeadersReceivedResponse) => void
+    ) => {
       callback({
         responseHeaders: {
           ...details.responseHeaders,
