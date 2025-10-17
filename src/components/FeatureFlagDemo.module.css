@@ -1,0 +1,77 @@
+/**
+ * FeatureFlagDemo Styles
+ * CSS Modules for CSP compliance
+ */
+
+.container {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: system-ui, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.heading {
+  color: var(--color-text);
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+}
+
+.enabledFeature {
+  padding: 8px;
+  margin: 4px 0;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+}
+
+.enabledBadge {
+  margin-left: 10px;
+  color: #4caf50;
+}
+
+.disabledFeature {
+  padding: 8px;
+  margin: 4px 0;
+  background-color: #ffebee;
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.disabledBadge {
+  margin-left: 10px;
+  color: #f44336;
+}
+
+.examplesSection {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: var(--color-background);
+  border-radius: 4px;
+}
+
+.codeBlock {
+  background-color: var(--color-surface);
+  padding: 4px 8px;
+  border-radius: 3px;
+  color: var(--color-text);
+}
+
+.exampleDiv {
+  margin-bottom: 15px;
+}
+
+.successText {
+  color: #4caf50;
+}
+
+.errorText {
+  color: #f44336;
+}

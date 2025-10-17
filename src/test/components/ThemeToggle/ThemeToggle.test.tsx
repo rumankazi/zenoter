@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '../../../context/ThemeContext';
@@ -15,19 +15,6 @@ const renderWithTheme = () => {
 describe('ThemeToggle', () => {
   beforeEach(() => {
     localStorage.clear();
-
-    // Mock matchMedia
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: vi.fn().mockImplementation((query: string) => ({
-        matches: false, // Default to light mode
-        media: query,
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
-    });
   });
 
   describe('rendering', () => {

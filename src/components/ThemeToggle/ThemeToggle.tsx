@@ -6,6 +6,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import type { FC } from 'react';
+import styles from './ThemeToggle.module.css';
 
 /**
  * ThemeToggle Component
@@ -20,22 +21,9 @@ export const ThemeToggle: FC = () => {
       onClick={toggleTheme}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        width: '40px',
-        height: '40px',
-        backgroundColor: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 0,
-        zIndex: 1000,
-      }}
+      className={styles.toggleButton}
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      aria-pressed={isDark}
       data-testid="theme-toggle"
     >
       <AnimatePresence mode="wait">
@@ -46,10 +34,7 @@ export const ThemeToggle: FC = () => {
             animate={{ rotate: 0, scale: 1, opacity: 1 }}
             exit={{ rotate: 90, scale: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            style={{
-              width: '22px',
-              height: '22px',
-            }}
+            className={styles.iconSvg}
             viewBox="0 0 24 24"
             fill="none"
             stroke="var(--color-text)"
@@ -66,10 +51,7 @@ export const ThemeToggle: FC = () => {
             animate={{ rotate: 0, scale: 1, opacity: 1 }}
             exit={{ rotate: -90, scale: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            style={{
-              width: '24px',
-              height: '24px',
-            }}
+            className={styles.sunIconSvg}
             viewBox="0 0 24 24"
             fill="none"
             stroke="var(--color-text)"
