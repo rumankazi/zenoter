@@ -80,7 +80,7 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       all: true,
       thresholds: {
-        lines: 80,
+        lines: 90,
         functions: 80,
         branches: 80,
         statements: 80,

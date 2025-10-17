@@ -6,7 +6,7 @@ Provide project context and coding guidelines that AI should follow when generat
 
 # Zenoter Development Context
 
-**Last Updated**: 2025-10-17 15:51:00 UTC  
+**Last Updated**: 2025-10-17 15:55:00 UTC  
 **Current Phase**: Phase 1 - MVP Development  
 **Current Sprint**: Sprint 1 (2025-10-17 to 2025-10-24)
 
@@ -155,7 +155,7 @@ const fadeIn = {
 
 ## Testing Requirements
 
-- Minimum 80% code coverage
+- Minimum 90% code coverage
 - Write test first, then implement
 - Use descriptive test names
 - Include edge cases
@@ -240,8 +240,8 @@ When we reach Phase 2, we will:
 - [x] Testing framework (Vitest + Playwright)
 - [x] CI/CD with semantic-release
 - [x] Documentation site (VitePress + GitHub Pages)
-- [ ] Electron main process implementation
-- [ ] Feature flags system (`src/config/featureFlags.ts`)
+- [x] Electron main process implementation
+- [x] Feature flags system (`src/config/featureFlags.ts`)
 - [ ] Theme system (dark/light mode)
 - [ ] Base component library
 
