@@ -126,7 +126,7 @@ jobs:
             COMMENT+="**Artifacts**: GitHub Release ${INSTALLER}"$'\n\n'
             
             # Show commits
-            COMMENT+="### � Commits"$'\n\n'
+            COMMENT+="### 📝 Commits"$'\n\n'
             while IFS= read -r line; do
               [ -n "$line" ] && COMMENT+="- ${line}"$'\n'
             done <<< "$COMMITS"
