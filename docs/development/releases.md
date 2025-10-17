@@ -5,25 +5,71 @@ This document describes the automated release workflow for Zenoter using semanti
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [Release Branch Strategy](#release-branch-strategy)
 - [Release Types](#release-types)
 - [Automated Releases](#automated-releases)
-- [Manual Major Releases](#manual-major-releases)
+- [Manual Releases](#manual-releases)
+- [Release Candidates](#release-candidates)
 - [Commit Convention](#commit-convention)
-- [PR Labels](#pr-labels)
 - [Release Artifacts](#release-artifacts)
 - [Troubleshooting](#troubleshooting)
 
 ## 🎯 Overview
 
-Zenoter uses **semantic-release** for automated version management and releases. Every merge to `main` can trigger a release based on conventional commit messages.
+Zenoter uses **semantic-release** with a **dedicated release branch** for automated version management. This strategy solves the problem of branch protection on `main` preventing semantic-release from pushing version commits.
 
 ### Key Principles
 
-- ✅ **Automated** - Releases happen automatically on merge to main
+- ✅ **Release Branch** - Dedicated `release` branch for semantic-release
+- ✅ **Protected Main** - `main` stays protected with PR + status checks
+- ✅ **Auto-Sync** - `main` automatically syncs to `release` branch
+- ✅ **Native Tools** - Uses GitHub CLI instead of third-party actions
+- ✅ **RC Support** - Release candidates via workflow dispatch or `rc/*` branches
 - ✅ **Semantic Versioning** - Follows semver (MAJOR.MINOR.PATCH)
 - ✅ **Conventional Commits** - Commit messages determine release type
 - ✅ **Selective Artifacts** - Only major releases include installers
 - ✅ **CHANGELOG** - Automatically generated and maintained
+
+## 🌿 Release Branch Strategy
+
+### Branch Structure
+
+```
+main (protected)
+  ↓ auto-sync on every push
+release (semantic-release runs here)
+  ↓ creates tags & GitHub releases
+v1.0.0, v1.1.0, v2.0.0-rc.1, etc.
+```
+
+### How It Works
+
+1. **Developer Flow**:
+   - Create feature branch from `main`
+   - Open PR to `main`
+   - PR must pass all qualification checks
+   - Merge to `main` (requires approval + checks)
+
+2. **Auto-Sync Flow**:
+   - When `main` receives a push
+   - Workflow automatically syncs `main` → `release`
+   - No manual intervention needed
+
+3. **Release Flow**:
+   - `release` branch push triggers semantic-release
+   - Analyzes conventional commits
+   - Determines version bump
+   - Creates tag, GitHub Release, updates CHANGELOG
+   - Pushes version commit back to `release` branch
+
+### Why This Strategy?
+
+| Issue                          | Solution                                            |
+| ------------------------------ | --------------------------------------------------- |
+| Can't push to protected `main` | semantic-release runs on `release` branch           |
+| Need PR + checks on main       | `main` stays fully protected                        |
+| Version commits bypass checks  | Version commits only go to `release`, not `main`    |
+| GITHUB_TOKEN permissions       | Can write to `release` branch without special token |
 
 ## 📦 Release Types
 

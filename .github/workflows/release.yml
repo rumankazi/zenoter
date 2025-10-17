@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - release # Dedicated release branch
   workflow_dispatch:
 
 permissions:
@@ -19,12 +19,13 @@ jobs:
       new-release-published: ${{ steps.semantic.outputs.new-release-published }}
       new-release-version: ${{ steps.semantic.outputs.new-release-version }}
       new-release-major-version: ${{ steps.semantic.outputs.new-release-major-version }}
+      new-release-channel: ${{ steps.semantic.outputs.new-release-channel }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -32,7 +33,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
@@ -55,18 +55,21 @@ jobs:
         run: |
           echo "🎉 New release published: v${{ steps.semantic.outputs.new-release-version }}"
           echo "Major version: ${{ steps.semantic.outputs.new-release-major-version }}"
+          echo "Channel: ${{ steps.semantic.outputs.new-release-channel }}"
 
-  # Build installers only for major releases
+  # Build installers for major releases (including RC for testing)
   build-installers:
     name: Build Windows Installer
     needs: release
-    if: needs.release.outputs.new-release-published == 'true' && needs.release.outputs.new-release-major-version != '0'
+    if: |
+      needs.release.outputs.new-release-published == 'true' && 
+      (endsWith(needs.release.outputs.new-release-version, '.0.0') || needs.release.outputs.new-release-channel == 'rc')
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: main
+          ref: v${{ needs.release.outputs.new-release-version }}
           fetch-depth: 0
 
       - name: Setup pnpm
@@ -75,7 +78,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
@@ -90,32 +92,40 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload installer to release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.release.outputs.new-release-version }}
-          files: |
-            dist/*.exe
-            dist/*.zip
-          append_body: true
-          body: |
-
-            ---
-
-            ## 📦 Installation
-
-            ### Windows
-            1. Download `Zenoter-Setup-${{ needs.release.outputs.new-release-version }}.exe`
-            2. Run the installer
-            3. Follow the installation wizard
-
-            ### Portable Version
-            1. Download `Zenoter-${{ needs.release.outputs.new-release-version }}-win.zip`
-            2. Extract to desired location
-            3. Run `Zenoter.exe`
-
-            ---
-
-            **See full release notes above** ⬆️
+      - name: Upload installer to release (native)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ needs.release.outputs.new-release-version }}"
+
+          # Upload installer
+          gh release upload "$TAG" dist/*.exe dist/*.zip --clobber
+
+          # Append installation instructions
+          INSTALL_NOTES="
+
+          ---
+
+          ## 📦 Installation
+
+          ### Windows Installer
+          1. Download \`Zenoter-Setup-${{ needs.release.outputs.new-release-version }}.exe\`
+          2. Run the installer
+          3. Follow the installation wizard
+
+          ### Portable Version
+          1. Download \`Zenoter-${{ needs.release.outputs.new-release-version }}-win.zip\`
+          2. Extract to desired location
+          3. Run \`Zenoter.exe\`
+
+          ---
+
+          **System Requirements:**
+          - Windows 10/11 (64-bit)
+          - 4GB RAM minimum
+          - 500MB free disk space
+          "
+
+          # Get current body and append
+          CURRENT_BODY=$(gh release view "$TAG" --json body -q .body)
+          echo "$CURRENT_BODY$INSTALL_NOTES" | gh release edit "$TAG" --notes-file -
