@@ -1,5 +1,7 @@
 import { FC } from 'react';
 import { FileTree } from './components/FileTree/FileTree';
+import { FeatureFlagDemo } from './components/FeatureFlagDemo';
+import './App.css';
 
 /**
  * Main App component - Phase 1 MVP
@@ -28,10 +30,15 @@ export const App: FC = () => {
         style={{
           flex: 1,
           padding: '2rem',
+          overflowY: 'auto',
         }}
       >
         <h1>Zenoter - Phase 1 MVP</h1>
         <p>Modern note-taking app for developers</p>
+
+        <div style={{ marginTop: '40px' }}>
+          <FeatureFlagDemo />
+        </div>
       </main>
     </div>
   );

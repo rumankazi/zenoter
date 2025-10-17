@@ -1,13 +1,71 @@
 # Skip hooks in CI environments
 [ -n "$CI" ] && exit 0
 
-echo "🔍 Pre-commit checks..."
+echo "🔍 Running pre-commit qualification checks..."
+echo ""
 
-# Run lint-staged on staged files
+# 1. Lint-staged (format + lint staged files)
 echo "📝 Linting and formatting staged files..."
 pnpm lint-staged || {
-    echo "❌ Lint-staged failed. Please fix errors."
+    echo "❌ Lint-staged failed. Errors auto-fixed where possible."
+    echo "ℹ️  Please review changes and re-add files with 'git add'"
     exit 1
 }
+echo "✅ Lint-staged passed!"
+echo ""
 
-echo "✅ Pre-commit checks passed!"
+# 2. TypeScript
+echo "🔷 Type checking..."
+pnpm typecheck || {
+    echo "❌ Type check failed. Please fix TypeScript errors."
+    exit 1
+}
+echo "✅ Type check passed!"
+echo ""
+
+# 3. prettier format check
+echo "🎨 Checking code formatting with Prettier..."
+pnpm format:check || {
+    echo "❌ Prettier format check failed. Please format your code with Prettier."
+    exit 1
+}
+echo "✅ Prettier format check passed!"
+echo ""
+
+# 4. Unit Tests (with coverage)
+echo "🧪 Running unit tests with coverage..."
+pnpm test:coverage -- --run || {
+    echo "❌ Tests failed. Please fix failing tests."
+    exit 1
+}
+echo "✅ All tests passed!"
+echo ""
+
+# 5. Electron compile (ensure electron code compiles)
+echo "⚡ Verifying Electron compilation..."
+pnpm electron:compile || {
+    echo "❌ Electron compilation failed. Please fix errors."
+    exit 1
+}
+echo "✅ Electron compilation passed!"
+echo ""
+
+# 6. Build (ensure production build works)
+echo "🏗️  Verifying production build..."
+pnpm build || {
+    echo "❌ Production build failed. Please fix build errors."
+    exit 1
+}
+echo "✅ Production build passed!"
+echo ""
+
+# 7. E2E Tests (quick, only changed files)
+echo "🚀 Running E2E tests..."
+pnpm test:e2e || {
+    echo "❌ E2E tests failed. Please fix E2E test errors."
+    exit 1
+}
+echo "✅ E2E tests passed!"
+echo ""
+
+echo "✅ All pre-commit checks passed! Ready to commit!"
