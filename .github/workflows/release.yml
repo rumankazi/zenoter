@@ -46,7 +46,21 @@ jobs:
           GIT_AUTHOR_EMAIL: kaziruman@gmail.com
           GIT_COMMITTER_NAME: rumankazi
           GIT_COMMITTER_EMAIL: kaziruman@gmail.com
-        run: pnpm exec semantic-release
+        run: |
+          # Run semantic-release and capture output
+          OUTPUT=$(pnpm exec semantic-release 2>&1)
+          echo "$OUTPUT"
+
+          # Parse output for release information
+          if echo "$OUTPUT" | grep -q "Published release"; then
+            VERSION=$(echo "$OUTPUT" | grep -oP "Published release \K[0-9]+\.[0-9]+\.[0-9]+")
+            echo "new-release-published=true" >> $GITHUB_OUTPUT
+            echo "new-release-version=$VERSION" >> $GITHUB_OUTPUT
+            echo "✅ New release published: v$VERSION"
+          else
+            echo "new-release-published=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  No release published"
+          fi
 
       - name: Output release info
         if: steps.semantic.outputs.new-release-published == 'true'
