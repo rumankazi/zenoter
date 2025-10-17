@@ -249,12 +249,7 @@ Pre-release: true (auto-checked)
 Release notes: 'Please test the new search feature'
 ```
 
-**Result**: v0.2.0-rc.1 (pre-release, no installer)
-
-```
-
-**Updated**: v0.2.0-rc.1 (pre-release, **with installer for testing** ✨)
-```
+**Result**: v0.2.0-rc.1 (pre-release) with installer for testing ✨
 
 #### Example 3: Beta from Feature Branch
 
@@ -268,8 +263,6 @@ Release notes: 'Early preview of v2.0 architecture'
 
 **Result**: v2.0.0-beta.1 (pre-release, no installer)
 
-```
-
 **Note**: Custom releases don't auto-build installers. For custom releases with installers, manually run the build after workflow completes.
 
 ## 🧪 Release Candidates
@@ -277,13 +270,11 @@ Release notes: 'Early preview of v2.0 architecture'
 ### Method 1: Manual Workflow
 
 ```
-
 Actions → Create Release
 Release type: release-candidate
 Source branch: main
 → Creates v0.2.0-rc.1
-
-````
+```
 
 ### Method 2: RC Branch
 
@@ -298,7 +289,7 @@ git push origin rc/v1.0.0
 
 # semantic-release auto-detects RC branch
 # Creates: v1.0.0-rc.1 (pre-release)
-````
+```
 
 ### RC Auto-Increment
 
@@ -503,11 +494,12 @@ git log $(git describe --tags --abbrev=0)..HEAD --oneline
 
 **Symptom**: Release created but no installer attached
 
-**Expected**: Installers only built for:
+**Expected**: Installers are built for:
 
 - Major releases (v1.0.0, v2.0.0, etc.)
-- NOT v0.x.x releases
-- NOT RC/beta/pre-releases
+- Release candidates (RC) for testing
+- NOT v0.x.x releases (minor/patch)
+- NOT beta/pre-releases (unless RC)
 
 **Force installer build**:
 

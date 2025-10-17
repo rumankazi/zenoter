@@ -38,7 +38,7 @@ jobs:
             echo "✅ Created release branch"
           else
             echo "📝 Syncing main → release"
-            git checkout release
+            git checkout -B release origin/release
             
             # Try to merge with conflict detection
             if git merge origin/main --no-edit --no-ff -m "chore: sync main to release [skip ci]"; then
