@@ -50,16 +50,6 @@ Closes #
 <!-- Ensure all items are checked before requesting review -->
 
 - [ ] My code follows the project's code style guidelines
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings or errors
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
-- [ ] I have checked my code and corrected any misspellings
-- [ ] I have updated the feature flags if needed
-- [ ] I have considered the impact on animations and UX
 
 ## Phase Compliance
 
@@ -73,15 +63,3 @@ Closes #
 <!-- Add any additional notes for reviewers -->
 
 ---
-
-<!--
-This PR will be automatically checked by our qualification pipeline:
-- ✅ Code quality (ESLint, Prettier)
-- ✅ Type safety (TypeScript)
-- ✅ Unit & Integration tests (80% coverage minimum)
-- ✅ E2E tests (Playwright)
-- ✅ Build verification
-- ✅ Security audit
-
-All checks must pass before this PR can be merged.
--->
