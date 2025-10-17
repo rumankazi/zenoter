@@ -81,9 +81,17 @@ app.on('web-contents-created', (_event, contents) => {
   contents.on('will-navigate', (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
 
-    // Allow navigation within the app
-    if (parsedUrl.origin !== 'http://localhost:5173' && !isDev) {
-      event.preventDefault();
+    // Allow navigation only within the app
+    if (isDev) {
+      // In dev: allow localhost:5173 only
+      if (parsedUrl.origin !== 'http://localhost:5173') {
+        event.preventDefault();
+      }
+    } else {
+      // In prod: allow file: protocol only
+      if (parsedUrl.protocol !== 'file:') {
+        event.preventDefault();
+      }
     }
   });
 });

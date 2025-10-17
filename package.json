@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "electron": "electron .",
+    "electron": "pnpm electron:compile && electron .",
     "electron:dev": "concurrently \"pnpm dev\" \"pnpm electron:compile && wait-on http://localhost:5173 && electron .\"",
     "electron:compile": "tsc -p electron/main/tsconfig.json && tsc -p electron/preload/tsconfig.json",
     "electron:build": "pnpm build && pnpm electron:compile && electron-builder",

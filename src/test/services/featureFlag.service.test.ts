@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { FeatureFlagService } from '../../services/featureFlag.service';
-import * as featureFlagsModule from '../../config/featureFlags';
 
 describe('FeatureFlagService', () => {
   let service: FeatureFlagService;
@@ -40,13 +39,20 @@ describe('FeatureFlagService', () => {
       expect(service.isEnabled('VERSION_CONTROL')).toBe(false);
     });
 
-    it('should read from FEATURE_FLAGS configuration', () => {
-      const spy = vi.spyOn(featureFlagsModule, 'FEATURE_FLAGS', 'get');
-      service.isEnabled('DARK_MODE');
-      expect(spy).toHaveBeenCalled();
+    it('should return correct values from config', () => {
+      // Verify service reads actual config values
+      const enabledKeys = ['LOCAL_STORAGE', 'BASIC_EDITOR', 'FILE_TREE'] as const;
+      const disabledKeys = ['CLOUD_SYNC', 'AUTH_SYSTEM'] as const;
+
+      enabledKeys.forEach((key) => {
+        expect(service.isEnabled(key)).toBe(true);
+      });
+
+      disabledKeys.forEach((key) => {
+        expect(service.isEnabled(key)).toBe(false);
+      });
     });
   });
-
   describe('getAllFlags', () => {
     it('should return all feature flags', () => {
       const flags = service.getAllFlags();
@@ -55,9 +61,10 @@ describe('FeatureFlagService', () => {
     });
 
     it('should return a copy, not the original object', () => {
-      const flags = service.getAllFlags();
-      expect(flags).not.toBe(featureFlagsModule.FEATURE_FLAGS);
-      expect(flags).toEqual(featureFlagsModule.FEATURE_FLAGS);
+      const flags1 = service.getAllFlags();
+      const flags2 = service.getAllFlags();
+      expect(flags1).not.toBe(flags2);
+      expect(flags1).toEqual(flags2);
     });
   });
 
@@ -65,7 +72,7 @@ describe('FeatureFlagService', () => {
     it('should return only enabled flags', () => {
       const enabledFlags = service.getEnabledFlags();
       expect(Array.isArray(enabledFlags)).toBe(true);
-      enabledFlags.forEach((flag: featureFlagsModule.FeatureFlagKey) => {
+      enabledFlags.forEach((flag) => {
         expect(service.isEnabled(flag)).toBe(true);
       });
     });

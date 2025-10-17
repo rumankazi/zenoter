@@ -19,7 +19,9 @@ describe('useFeatureFlag', () => {
     mockService = {
       isEnabled: vi.fn(),
     };
-    vi.mocked(FeatureFlagService.getInstance).mockReturnValue(mockService as any);
+    vi.mocked(FeatureFlagService.getInstance).mockReturnValue(
+      mockService as unknown as FeatureFlagService
+    );
   });
 
   it('should return true when feature is enabled', () => {
