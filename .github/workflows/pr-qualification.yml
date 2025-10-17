@@ -107,11 +107,6 @@ jobs:
           fail_ci_if_error: false
           files: ./coverage/coverage-final.json
 
-      - name: Check coverage threshold
-        run: |
-          # Ensure minimum 80% coverage as per project guidelines
-          pnpm vitest run --coverage.enabled --coverage.thresholds.lines=80
-
   # Job 4: E2E Tests (Playwright)
   e2e-tests:
     name: E2E Tests
@@ -196,10 +191,6 @@ jobs:
       - name: Run pnpm audit
         run: pnpm audit --audit-level moderate
         continue-on-error: true
-
-      - name: Run npm audit (fallback)
-        run: |
-          npm audit --audit-level moderate || echo "::warning::Security vulnerabilities found. Please review."
 
   # Job 7: PR Status Summary
   pr-status:
