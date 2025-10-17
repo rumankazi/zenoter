@@ -65,12 +65,16 @@ test.describe('Zenoter App - Phase 1 MVP E2E Tests', () => {
     // Verify the element is visible (animation completed)
     await expect(fileTree).toBeVisible();
 
+    // Wait a bit for animation to complete
+    await page.waitForTimeout(500);
+
     // Check if opacity is 1 (animation finished)
     const opacity = await fileTree.evaluate((el) => {
       return window.getComputedStyle(el).opacity;
     });
 
-    expect(parseFloat(opacity)).toBeGreaterThanOrEqual(0.9);
+    // Should be fully visible after animation
+    expect(parseFloat(opacity)).toBeGreaterThanOrEqual(0.95);
   });
 
   test('should display all expected UI elements', async ({ page }) => {

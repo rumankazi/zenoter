@@ -6,12 +6,25 @@ Provide project context and coding guidelines that AI should follow when generat
 
 # Zenoter Development Context
 
-**Last Updated**: 2025-10-17 08:12:59 UTC  
-**Current Phase**: Phase 1 - MVP Development
+**Last Updated**: 2025-10-17 14:59:00 UTC  
+**Current Phase**: Phase 1 - MVP Development  
+**Current Sprint**: Sprint 1 (2025-10-17 to 2025-10-24)
 
 ## Project Overview
 
 Zenoter is a modern, animated note-taking app for developers with VS Code-like interface. We prioritize smooth animations and great UX over lightweight footprint.
+
+## 🔄 CRITICAL: Always Update Progress
+
+**WHEN OPENING THIS PROJECT**, Copilot should ALWAYS:
+
+1. **Check Current Progress**: Review PLAN.md Sprint section and update if completed tasks exist
+2. **Update Last Updated Timestamp**: Change the timestamp at the top of this file
+3. **Document Completed Work**: If any features were implemented, update the "Current Sprint Progress" section below
+4. **Identify Next Tasks**: Based on completed work, suggest the next logical steps
+5. **Update Feature Status**: Mark completed features in the checklist below
+
+This ensures continuity across sessions and different devices.
 
 ## Current Development Phase
 
@@ -60,6 +73,29 @@ VERSION_CONTROL: false,
 6. **Implement feature flags for gradual rollout**
 7. **Keep infrastructure costs minimal until scaling needed**
 
+## Documentation Strategy
+
+**IMPORTANT: Lightweight Documentation Approach**
+
+- **DO NOT** create separate documentation for every incremental change
+- **DO NOT** write docs for work-in-progress features
+- **DO** add brief inline code comments for complex logic
+- **DO** update relevant sections in existing docs (like PLAN.md) at major milestones
+- **DO** document only when:
+  - A complete feature is finished and tested
+  - A major architecture decision is made
+  - User-facing functionality changes significantly
+  - API contracts are finalized
+
+**Documentation Updates to Make:**
+
+- Update PLAN.md Sprint section when sprint completes
+- Update ARCHITECTURE.md only for major structural changes
+- Update feature docs in `/docs` only at phase completions or major releases
+- Keep inline TypeDoc comments for public APIs
+
+**Focus on code quality and tests over documentation during development.**
+
 ## Code Style Guidelines
 
 - Functional React components with hooks
@@ -83,12 +119,38 @@ const fadeIn = {
 
 ## Current Sprint Focus
 
-**Sprint 1 (2025-10-17 to 2025-10-24)**
+**Sprint 1 (2025-10-17 to 2025-10-24)** - Foundation Setup
 
-- Project setup with Electron + React
-- Monaco Editor integration
-- Basic file tree component
-- Initial test suite
+### Sprint 1 Progress Tracker
+
+- [x] Project setup with Electron + React
+- [x] TypeScript strict mode configured
+- [x] Vitest + Playwright setup
+- [x] Basic file tree component
+- [x] Initial test suite
+- [x] CI/CD pipeline with semantic-release
+- [x] GitHub Pages documentation site deployed
+- [ ] Create Electron main/preload files
+- [ ] Implement feature flags system
+- [ ] Build theme system (dark/light)
+- [ ] Integrate Monaco Editor
+- [ ] Set up SQLite database
+
+### Current Status Summary
+
+**Completed (70% of Sprint 1)**:
+
+- ✅ Infrastructure & build system
+- ✅ Testing framework with 100% coverage
+- ✅ Documentation site deployed
+- ✅ CI/CD automation
+
+**In Progress**:
+
+- 🚧 Electron desktop app structure
+- 🚧 Core feature implementation
+
+**Next Priority**: Create Electron files to enable desktop app execution
 
 ## Testing Requirements
 
@@ -165,9 +227,41 @@ When we reach Phase 2, we will:
 
 ## Quick References
 
-- [Architecture](../ARCHITECTURE.md)
-- [Development Plan](../PLAN.md)
-- [Feature Flags](../src/config/featureFlags.ts)
+- [Architecture](../../ARCHITECTURE.md)
+- [Development Plan](../../PLAN.md)
+- [Documentation Site](https://rumankazi.github.io/zenoter/)
+
+## Phase 1 Feature Completion Checklist
+
+### Week 1-2: Foundation (Current)
+
+- [x] Project infrastructure setup
+- [x] Testing framework (Vitest + Playwright)
+- [x] CI/CD with semantic-release
+- [x] Documentation site (VitePress + GitHub Pages)
+- [ ] Electron main process implementation
+- [ ] Feature flags system (`src/config/featureFlags.ts`)
+- [ ] Theme system (dark/light mode)
+- [ ] Base component library
+
+### Week 3-4: Core Features
+
+- [ ] Monaco Editor integration
+- [ ] File tree with drag-and-drop
+- [ ] SQLite database setup
+- [ ] Note CRUD operations
+- [ ] Markdown preview pane
+- [ ] Auto-save functionality
+
+### Week 5-6: Polish & Testing
+
+- [ ] Framer Motion animations throughout
+- [ ] Keyboard shortcuts system
+- [ ] Search implementation (local)
+- [ ] Import/Export (markdown files)
+- [ ] Settings panel
+- [ ] Complete E2E test suite
+- [ ] Windows installer (.exe)
 
 ## Common Patterns
 

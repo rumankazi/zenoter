@@ -49,4 +49,20 @@ pnpm build || {
 echo "✅ Build passed!"
 echo ""
 
+# 6. Electron build
+echo "⚡ Verifying Electron build..."
+pnpm electron:build || {
+    echo "❌ Electron build failed. Please fix Electron build errors."
+    exit 1
+}
+
+# 7. E2E Tests
+echo "🚀 Running Electron E2E tests..."
+pnpm test:e2e || {
+    echo "❌ E2E tests failed. Please fix E2E test errors."
+    exit 1
+}
+echo "✅ E2E tests passed!"
+echo ""
+
 echo "🚀 All pre-push checks passed! Ready to push!"
