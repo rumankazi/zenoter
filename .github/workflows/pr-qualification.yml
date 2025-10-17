@@ -1,0 +1,240 @@
+name: PR Qualification Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  statuses: write
+
+jobs:
+  # Job 1: Code Quality Checks
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Run Prettier check
+        run: pnpm format:check
+
+      - name: Check commit messages
+        if: github.event_name == 'pull_request'
+        run: |
+          # Check if commits follow conventional commit format
+          pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  # Job 2: Type Safety
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript type check
+        run: pnpm typecheck
+
+  # Job 3: Unit & Integration Tests
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: false
+          files: ./coverage/coverage-final.json
+
+      - name: Check coverage threshold
+        run: |
+          # Ensure minimum 80% coverage as per project guidelines
+          pnpm vitest run --coverage.enabled --coverage.thresholds.lines=80
+
+  # Job 4: E2E Tests (Playwright)
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # Job 5: Build Verification
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Check build artifacts
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build failed: dist directory not found"
+            exit 1
+          fi
+
+  # Job 6: Security Audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Run pnpm audit
+        run: pnpm audit --audit-level moderate
+        continue-on-error: true
+
+      - name: Run npm audit (fallback)
+        run: |
+          npm audit --audit-level moderate || echo "::warning::Security vulnerabilities found. Please review."
+
+  # Job 7: PR Status Summary
+  pr-status:
+    name: PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, type-check, test, e2e-tests, build, security]
+    if: always()
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "Code Quality: ${{ needs.code-quality.result }}"
+          echo "Type Check: ${{ needs.type-check.result }}"
+          echo "Tests: ${{ needs.test.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Security: ${{ needs.security.result }}"
+
+      - name: Verify all jobs passed
+        if: |
+          needs.code-quality.result != 'success' ||
+          needs.type-check.result != 'success' ||
+          needs.test.result != 'success' ||
+          needs.e2e-tests.result != 'success' ||
+          needs.build.result != 'success'
+        run: |
+          echo "::error::One or more qualification checks failed"
+          exit 1
+
+      - name: Success
+        if: |
+          needs.code-quality.result == 'success' &&
+          needs.type-check.result == 'success' &&
+          needs.test.result == 'success' &&
+          needs.e2e-tests.result == 'success' &&
+          needs.build.result == 'success'
+        run: |
+          echo "✅ All PR qualification checks passed!"
+          echo "This PR is ready for review and merge."
