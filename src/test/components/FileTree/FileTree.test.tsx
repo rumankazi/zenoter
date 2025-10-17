@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { FileTree } from './FileTree';
+import { FileTree } from '../../../components/FileTree/FileTree';
 
 describe('FileTree Component', () => {
   it('should render the file tree container', () => {

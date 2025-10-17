@@ -65,7 +65,8 @@ VERSION_CONTROL: false,
 - Functional React components with hooks
 - TypeScript strict mode (no `any` types)
 - Animations using Framer Motion patterns
-- Test files alongside source files (\*.test.ts)
+- Test files in `src/test/` directory following source structure
+- E2E tests in `src/test/e2e/` subdirectory
 - Feature flags for new functionality
 - Comments for complex logic
 
@@ -100,8 +101,23 @@ const fadeIn = {
 
 - Components: PascalCase (NoteEditor.tsx)
 - Utilities: camelCase (markdown.ts)
-- Tests: _.test.ts or _.spec.ts
+- Unit/Integration Tests: \*.test.ts or \*.spec.ts (in src/test/)
+- E2E Tests: \*.e2e.ts (in src/test/e2e/)
 - Styles: \*.styles.ts (Emotion)
+
+## Test Directory Structure
+
+```
+src/test/
+  ├── setup.ts              # Test environment setup
+  ├── components/           # Component tests mirroring src/components/
+  │   └── FileTree/
+  │       └── FileTree.test.tsx
+  ├── services/             # Service tests
+  ├── utils/                # Utility tests
+  └── e2e/                  # End-to-end tests (Playwright)
+      └── editor.e2e.ts
+```
 
 ## Import Order
 
