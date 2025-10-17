@@ -1,6 +1,6 @@
 {
   "name": "zenoter",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "A modern, animated note-taking app for developers",
   "main": "dist-electron/main/index.js",
@@ -9,7 +9,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "prebuild": "node scripts/create-placeholder-icon.cjs",
+    "build": "tsc && vite build && pnpm electron:compile",
     "electron": "pnpm electron:compile && electron .",
     "electron:dev": "concurrently \"pnpm dev\" \"pnpm electron:compile && wait-on http://localhost:5173 && electron .\"",
     "electron:compile": "tsc -p electron/main/tsconfig.json && tsc -p electron/preload/tsconfig.json",
@@ -18,6 +19,8 @@
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
     "test:coverage": "vitest --coverage",
+    "test:installer": "bash scripts/test-installer.sh",
+    "verify:build": "bash scripts/verify-build.sh",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -72,7 +75,7 @@
     "concurrently": "^9.2.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "electron": "^38.3.0",
-    "electron-builder": "^26.0.12",
+    "electron-builder": "^25.0.5",
     "eslint": "^9.37.0",
     "eslint-plugin-react-hooks": "^7.0.0",
     "husky": "^9.1.7",
@@ -80,6 +83,7 @@
     "lint-staged": "^16.2.4",
     "prettier": "^3.6.2",
     "semantic-release": "^25.0.0",
+    "sharp": "^0.34.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vite": "^7.1.10",
@@ -94,12 +98,7 @@
     },
     "files": [
       "dist/**/*",
-      "electron/**/*",
-      "node_modules/**/*",
-      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
-      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
-      "!**/node_modules/*.d.ts",
-      "!**/node_modules/.bin"
+      "dist-electron/**/*"
     ],
     "publish": {
       "provider": "github",
@@ -107,7 +106,6 @@
       "repo": "zenoter"
     },
     "win": {
-      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -116,13 +114,14 @@
           ]
         },
         {
-          "target": "portable",
+          "target": "zip",
           "arch": [
             "x64"
           ]
         }
       ],
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
@@ -132,10 +131,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Zenoter",
       "perMachine": false,
+      "deleteAppDataOnUninstall": false,
       "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico",
-      "deleteAppDataOnUninstall": false
+      "uninstallerIcon": "build/icon.ico"
     },
     "portable": {
       "artifactName": "${productName}-${version}-win.${ext}"

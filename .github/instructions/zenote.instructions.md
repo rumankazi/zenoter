@@ -73,6 +73,39 @@ VERSION_CONTROL: false,
 6. **Implement feature flags for gradual rollout**
 7. **Keep infrastructure costs minimal until scaling needed**
 8. **CRITICAL: Maintain CSP compliance - NO inline styles or CSS-in-JS**
+9. **ALWAYS research best practices from top-tier projects (VS Code, Electron official docs)**
+10. **Security-first approach: Follow Electron Security Guide**
+
+## Security & CSP Best Practices
+
+**ALWAYS follow strict CSP even in development!**
+
+**Reference Projects**:
+
+- VS Code: https://github.com/microsoft/vscode
+- Electron Security: https://electronjs.org/docs/tutorial/security
+
+### CSP Implementation Rules:
+
+1. **NEVER use 'unsafe-inline' or 'unsafe-eval' in production**
+2. **Apply CSP via Electron session.defaultSession.webRequest.onHeadersReceived**
+3. **Remove CSP meta tags from HTML** - Electron controls CSP
+4. **Development mode**: Use nonce-based CSP for Vite HMR
+5. **Production mode**: Strict CSP (script-src 'self', style-src 'self')
+
+### Why No Meta Tag CSP?
+
+- Vite dev server injects styles via JavaScript for HMR
+- Meta tag CSP blocks this → CSS Modules don't load → broken UI
+- Solution: CSP via HTTP headers in Electron main process
+
+### Problem-Solving Approach:
+
+1. **Research** how VS Code/Electron/similar projects solve it
+2. **Check** official documentation and security guides
+3. **Implement** security-first solutions
+4. **Test** in both dev and production modes
+5. **Document** decisions in code comments
 
 ## Documentation Strategy
 
@@ -237,6 +270,15 @@ await page.waitForFunction(
   'Click me'
 );
 
+// ✅ CORRECT - Wait for element dimensions to match expected state
+await page.waitForFunction(
+  (selector) => {
+    const el = document.querySelector(selector);
+    return el && el.getBoundingClientRect().width > 1600;
+  },
+  'main'
+);
+
 // ❌ WRONG - Fixed timeouts (flaky tests)
 await page.waitForTimeout(500);
 
@@ -249,6 +291,17 @@ test('should update state', async () => {
 test('should update state', async () => {
   console.log('Initial state:', state);
 });
+
+// ✅ CORRECT - Bash glob file checks (CI/CD workflows)
+if ! ls dist/*.exe >/dev/null 2>&1; then
+  echo "No .exe files found"
+  exit 1
+fi
+
+// ❌ WRONG - [ -f ] with glob patterns (doesn't work)
+if [ ! -f dist/*.exe ]; then  # This fails with multiple matches
+  exit 1
+fi
 
 // ✅ CORRECT - Use global mocks from setup.ts
 // No need to mock matchMedia in individual tests

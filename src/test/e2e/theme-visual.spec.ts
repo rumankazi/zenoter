@@ -49,19 +49,46 @@ test.describe('Theme Visual Changes E2E', () => {
   });
 
   test('should verify body background changes with theme', async ({ page }) => {
-    // Set to light mode explicitly
+    // Set to light mode explicitly and wait for styles to apply
     await page.evaluate(() => {
       document.documentElement.setAttribute('data-theme', 'light');
     });
+
+    // Wait for CSS variables to be applied (deterministic)
+    await page.waitForFunction(
+      () => {
+        const bg = getComputedStyle(document.body).backgroundColor;
+        // Light mode should have white-ish background
+        return bg.includes('255, 255, 255') || bg.includes('#fff');
+      },
+      { timeout: 2000 }
+    );
 
     const lightBg = await page.evaluate(() => {
       return getComputedStyle(document.body).backgroundColor;
     });
 
-    // Set to dark mode
+    // Set to dark mode and wait for styles to apply
     await page.evaluate(() => {
       document.documentElement.setAttribute('data-theme', 'dark');
     });
+
+    // Wait for CSS variables to be applied (deterministic)
+    await page.waitForFunction(
+      () => {
+        const bg = getComputedStyle(document.body).backgroundColor;
+        // Dark mode should have dark background (rgb values < 50)
+        const match = bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (match) {
+          const r = parseInt(match[1]);
+          const g = parseInt(match[2]);
+          const b = parseInt(match[3]);
+          return r < 50 && g < 50 && b < 50;
+        }
+        return false;
+      },
+      { timeout: 2000 }
+    );
 
     const darkBg = await page.evaluate(() => {
       return getComputedStyle(document.body).backgroundColor;
@@ -69,6 +96,10 @@ test.describe('Theme Visual Changes E2E', () => {
 
     // Backgrounds should be different
     expect(lightBg).not.toBe(darkBg);
+
+    // Verify they match expected patterns
+    expect(lightBg).toMatch(/255|fff/i); // Light background
+    expect(darkBg).toMatch(/rgb\(26,\s*26,\s*26\)|rgb\(\d{1,2},\s*\d{1,2},\s*\d{1,2}\)/); // Dark background
   });
 
   test('should verify main app container uses theme colors', async ({ page }) => {

@@ -3,7 +3,6 @@ import { FileTree } from './components/FileTree/FileTree';
 import { FeatureFlagDemo } from './components/FeatureFlagDemo';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ThemeProvider } from './context/ThemeContext';
-import './App.css';
 import styles from './App.module.css';
 
 /**

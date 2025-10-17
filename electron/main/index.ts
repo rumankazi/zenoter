@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -54,6 +54,43 @@ function createWindow(): void {
  * App lifecycle: Ready
  */
 app.whenReady().then(() => {
+  // Configure Content Security Policy for both dev and production
+  // Following Electron Security Guide: https://electronjs.org/docs/tutorial/security
+  // Reference: VS Code implementation in src/vs/code/electron-main/app.ts
+
+  session.defaultSession.webRequest.onHeadersReceived(
+    (
+      details: Electron.OnHeadersReceivedListenerDetails,
+      callback: (response: Electron.HeadersReceivedResponse) => void
+    ) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            isDev
+              ? // Development: Allow Vite HMR (no 'unsafe-inline' needed!)
+                "default-src 'self'; " +
+                "script-src 'self'; " +
+                "style-src 'self'; " + // Vite loads CSS via <link> tags
+                "img-src 'self' data: https:; " +
+                "connect-src 'self' ws://localhost:5173 wss://localhost:5173; " + // WebSocket for HMR
+                "font-src 'self';"
+              : // Production: Strict CSP
+                "default-src 'self'; " +
+                "script-src 'self'; " +
+                "style-src 'self'; " +
+                "img-src 'self' data: https:; " +
+                "font-src 'self' data:; " +
+                "connect-src 'self'; " +
+                "frame-src 'none'; " +
+                "object-src 'none'; " +
+                "base-uri 'self';",
+          ],
+        },
+      });
+    }
+  );
+
   createWindow();
 
   // macOS: Re-create window when dock icon is clicked

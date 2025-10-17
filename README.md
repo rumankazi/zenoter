@@ -3,7 +3,7 @@
 > A modern, animated note-taking app for developers with VS Code-like interface
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Qualification](https://github.com/rumankazi/zenoter/actions/workflows/pr-qualification.yml/badge.svg)](https://github.com/rumankazi/zenoter/actions/workflows/pr-qualification.yml)
+[![Qualification](https://github.com/rumankazi/zenoter/actions/workflows/qualification.yml/badge.svg)](https://github.com/rumankazi/zenoter/actions/workflows/qualification.yml)
 [![CodeQL Advanced](https://github.com/rumankazi/zenoter/actions/workflows/codeql.yml/badge.svg)](https://github.com/rumankazi/zenoter/actions/workflows/codeql.yml)
 
 ## ✨ Features

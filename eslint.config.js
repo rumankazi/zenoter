@@ -15,6 +15,7 @@ export default tseslint.config(
       'docs/.vitepress/dist/**',
       'docs/.vitepress/cache/**',
       'docs/scripts/**',
+      'scripts/**',
       '*.config.js',
       '*.config.ts',
     ],
@@ -42,6 +43,25 @@ export default tseslint.config(
     files: ['electron/preload/**/*.ts'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+  {
+    // Node.js scripts with CommonJS
+    files: ['scripts/**/*.cjs', '**/*.cjs'],
+    languageOptions: {
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-undef': 'off',
     },
   }
 );
