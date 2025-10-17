@@ -23,7 +23,16 @@ pnpm typecheck || {
 echo "✅ Type check passed!"
 echo ""
 
-# 3. Unit Tests (with coverage)
+# 3. prettier format check
+echo "🎨 Checking code formatting with Prettier..."
+pnpm format:check || {
+    echo "❌ Prettier format check failed. Please format your code with Prettier."
+    exit 1
+}
+echo "✅ Prettier format check passed!"
+echo ""
+
+# 4. Unit Tests (with coverage)
 echo "🧪 Running unit tests with coverage..."
 pnpm test:coverage -- --run || {
     echo "❌ Tests failed. Please fix failing tests."
@@ -32,7 +41,7 @@ pnpm test:coverage -- --run || {
 echo "✅ All tests passed!"
 echo ""
 
-# 4. Electron compile (ensure electron code compiles)
+# 5. Electron compile (ensure electron code compiles)
 echo "⚡ Verifying Electron compilation..."
 pnpm electron:compile || {
     echo "❌ Electron compilation failed. Please fix errors."
@@ -41,7 +50,7 @@ pnpm electron:compile || {
 echo "✅ Electron compilation passed!"
 echo ""
 
-# 5. Build (ensure production build works)
+# 6. Build (ensure production build works)
 echo "🏗️  Verifying production build..."
 pnpm build || {
     echo "❌ Production build failed. Please fix build errors."
@@ -50,7 +59,7 @@ pnpm build || {
 echo "✅ Production build passed!"
 echo ""
 
-# 6. E2E Tests (quick, only changed files)
+# 7. E2E Tests (quick, only changed files)
 echo "🚀 Running E2E tests..."
 pnpm test:e2e || {
     echo "❌ E2E tests failed. Please fix E2E test errors."
