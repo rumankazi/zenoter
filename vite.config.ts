@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
@@ -48,5 +48,36 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'dist-ssr/**',
+        'out/**',
+        'electron-dist/**',
+        'build/**',
+        'docs/**',
+        'src/test/**',
+        'src/main.tsx',
+        '**/*.config.{js,ts}',
+        '**/*.test.{ts,tsx}',
+        '**/*.spec.{ts,tsx}',
+        '**/.vitepress/**',
+        'playwright.config.ts',
+        'commitlint.config.js',
+        'eslint.config.js',
+        'vite.config.ts',
+      ],
+      include: ['src/**/*.{ts,tsx}'],
+      all: true,
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
   },
 });

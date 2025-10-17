@@ -1,1 +1,10 @@
-pnpm lint-staged
+echo "🔍 Pre-commit checks..."
+
+# Run lint-staged on staged files
+echo "📝 Linting and formatting staged files..."
+pnpm lint-staged || {
+    echo "❌ Lint-staged failed. Please fix errors."
+    exit 1
+}
+
+echo "✅ Pre-commit checks passed!"
