@@ -1,3 +1,22 @@
+# ⚠️ CRITICAL: Avoid Accidental Major Releases!
+
+**DO NOT use `BREAKING CHANGE:` in your PR unless you intend a major release (v1.0.0, v2.0.0, etc.)**
+
+❌ **WRONG** (triggers major):
+
+```
+BREAKING CHANGE: none
+BREAKING CHANGE: N/A
+```
+
+✅ **CORRECT** (no release keyword):
+
+```
+Just describe changes normally
+```
+
+---
+
 ## Description
 
 <!-- Provide a brief description of the changes in this PR -->
@@ -6,9 +25,9 @@
 
 <!-- Mark the relevant option with an "x" -->
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] 🐛 Bug fix (patch: v0.1.0 → v0.1.1)
+- [ ] ✨ New feature (minor: v0.1.0 → v0.2.0)
+- [ ] 💥 Breaking change (major: v0.1.0 → v1.0.0) - **RARE!**
 - [ ] 📝 Documentation update
 - [ ] 🎨 Style/UI update (changes that don't affect code logic)
 - [ ] ♻️ Refactoring (code restructuring without changing functionality)
@@ -57,6 +76,12 @@ Closes #
 
 - [ ] Phase 1 - MVP (Local only, no cloud features)
 - [ ] Phase 2+ - Cloud features (requires feature flag)
+
+## Release Versioning
+
+- [ ] I understand how conventional commits affect versioning
+- [ ] I have NOT accidentally used `BREAKING CHANGE:` keyword
+- [ ] Check PR Release Preview comment above for version impact
 
 ## Additional Notes
 

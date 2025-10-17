@@ -34,81 +34,55 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Analyze release impact
+      - name: Run semantic-release dry-run
         id: analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get current version
-          CURRENT_VERSION=$(grep -Po '"version": *"\K[^"]*' package.json | sed 's/-rc\.[0-9]*//')
+          CURRENT_VERSION=$(grep -Po '"version": *"\K[^"]*' package.json)
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
-          # Get base branch (main)
-          git fetch origin main:main
+          # Run semantic-release in dry-run mode to get the actual next version
+          # Redirect to capture output
+          OUTPUT=$(pnpm exec semantic-release --dry-run --branches release 2>&1 || true)
 
-          # Get commits in this PR
+          echo "Semantic-release dry-run output:"
+          echo "$OUTPUT"
+
+          # Extract new version from output
+          if echo "$OUTPUT" | grep -q "The next release version is"; then
+            NEW_VERSION=$(echo "$OUTPUT" | grep -Po "The next release version is \K[0-9]+\.[0-9]+\.[0-9]+")
+            echo "will_release=true" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            
+            # Determine release type
+            IFS='.' read -r NEW_MAJOR NEW_MINOR NEW_PATCH <<< "$NEW_VERSION"
+            IFS='.' read -r CUR_MAJOR CUR_MINOR CUR_PATCH <<< "$CURRENT_VERSION"
+            
+            if [ "$NEW_MAJOR" -gt "$CUR_MAJOR" ]; then
+              echo "release_type=major" >> $GITHUB_OUTPUT
+            elif [ "$NEW_MINOR" -gt "$CUR_MINOR" ]; then
+              echo "release_type=minor" >> $GITHUB_OUTPUT
+            else
+              echo "release_type=patch" >> $GITHUB_OUTPUT
+            fi
+          elif echo "$OUTPUT" | grep -q "There are no relevant changes"; then
+            echo "will_release=false" >> $GITHUB_OUTPUT
+            echo "release_type=none" >> $GITHUB_OUTPUT
+            echo "new_version=" >> $GITHUB_OUTPUT
+          else
+            # Fallback: no release
+            echo "will_release=false" >> $GITHUB_OUTPUT
+            echo "release_type=none" >> $GITHUB_OUTPUT
+            echo "new_version=" >> $GITHUB_OUTPUT
+          fi
+
+          # Get commits for display
+          git fetch origin main:main
           COMMITS=$(git log --oneline origin/main..HEAD)
           echo "commits<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          # Analyze commit types
-          HAS_BREAKING=false
-          HAS_FEAT=false
-          HAS_FIX=false
-          BREAKING_COMMITS=""
-          FEAT_COMMITS=""
-          FIX_COMMITS=""
-
-          while IFS= read -r commit; do
-            if [[ $commit =~ feat!:|^[^:]+\!:|BREAKING[[:space:]]CHANGE ]]; then
-              HAS_BREAKING=true
-              BREAKING_COMMITS+="$commit"$'\n'
-            elif [[ $commit =~ ^[a-f0-9]+[[:space:]]feat(\(|:) ]]; then
-              HAS_FEAT=true
-              FEAT_COMMITS+="$commit"$'\n'
-            elif [[ $commit =~ ^[a-f0-9]+[[:space:]]fix(\(|:) ]]; then
-              HAS_FIX=true
-              FIX_COMMITS+="$commit"$'\n'
-            fi
-          done <<< "$COMMITS"
-
-          # Determine version bump
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-
-          WILL_RELEASE=false
-          RELEASE_TYPE="none"
-          NEW_VERSION=""
-
-          if [ "$HAS_BREAKING" = true ]; then
-            WILL_RELEASE=true
-            RELEASE_TYPE="major"
-            NEW_VERSION="$((MAJOR + 1)).0.0"
-          elif [ "$HAS_FEAT" = true ]; then
-            WILL_RELEASE=true
-            RELEASE_TYPE="minor"
-            NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
-          elif [ "$HAS_FIX" = true ]; then
-            WILL_RELEASE=true
-            RELEASE_TYPE="patch"
-            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-          fi
-
-          echo "will_release=$WILL_RELEASE" >> $GITHUB_OUTPUT
-          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "has_breaking=$HAS_BREAKING" >> $GITHUB_OUTPUT
-          echo "has_feat=$HAS_FEAT" >> $GITHUB_OUTPUT
-          echo "has_fix=$HAS_FIX" >> $GITHUB_OUTPUT
-
-          echo "breaking_commits<<EOF" >> $GITHUB_OUTPUT
-          echo "$BREAKING_COMMITS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "feat_commits<<EOF" >> $GITHUB_OUTPUT
-          echo "$FEAT_COMMITS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "fix_commits<<EOF" >> $GITHUB_OUTPUT
-          echo "$FIX_COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Generate release preview comment
@@ -118,12 +92,7 @@ jobs:
           RELEASE_TYPE: ${{ steps.analyze.outputs.release_type }}
           CURRENT_VERSION: ${{ steps.analyze.outputs.current_version }}
           NEW_VERSION: ${{ steps.analyze.outputs.new_version }}
-          HAS_BREAKING: ${{ steps.analyze.outputs.has_breaking }}
-          HAS_FEAT: ${{ steps.analyze.outputs.has_feat }}
-          HAS_FIX: ${{ steps.analyze.outputs.has_fix }}
-          BREAKING_COMMITS: ${{ steps.analyze.outputs.breaking_commits }}
-          FEAT_COMMITS: ${{ steps.analyze.outputs.feat_commits }}
-          FIX_COMMITS: ${{ steps.analyze.outputs.fix_commits }}
+          COMMITS: ${{ steps.analyze.outputs.commits }}
           REPO: ${{ github.repository }}
         run: |
           # Generate comment body
@@ -156,32 +125,14 @@ jobs:
             COMMENT+="\`\`\`"$'\n\n'
             COMMENT+="**Artifacts**: GitHub Release ${INSTALLER}"$'\n\n'
             
-            # Breaking changes
-            if [ "$HAS_BREAKING" = "true" ] && [ -n "$BREAKING_COMMITS" ]; then
-              COMMENT+="### 💥 Breaking Changes"$'\n\n'
-              while IFS= read -r line; do
-                [ -n "$line" ] && COMMENT+="- ${line}"$'\n'
-              done <<< "$BREAKING_COMMITS"
-              COMMENT+=$'\n'
-            fi
+            # Show commits
+            COMMENT+="### � Commits"$'\n\n'
+            while IFS= read -r line; do
+              [ -n "$line" ] && COMMENT+="- ${line}"$'\n'
+            done <<< "$COMMITS"
+            COMMENT+=$'\n'
             
-            # Features
-            if [ "$HAS_FEAT" = "true" ] && [ -n "$FEAT_COMMITS" ]; then
-              COMMENT+="### ✨ Features"$'\n\n'
-              while IFS= read -r line; do
-                [ -n "$line" ] && COMMENT+="- ${line}"$'\n'
-              done <<< "$FEAT_COMMITS"
-              COMMENT+=$'\n'
-            fi
-            
-            # Bug fixes
-            if [ "$HAS_FIX" = "true" ] && [ -n "$FIX_COMMITS" ]; then
-              COMMENT+="### 🐛 Bug Fixes"$'\n\n'
-              while IFS= read -r line; do
-                [ -n "$line" ] && COMMENT+="- ${line}"$'\n'
-              done <<< "$FIX_COMMITS"
-              COMMENT+=$'\n'
-            fi
+            COMMENT+="**Note**: Version determined by semantic-release analysis"$'\n\n'
             
             COMMENT+="---"$'\n\n'
             COMMENT+="### 📋 Release Process"$'\n\n'
