@@ -48,7 +48,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd docs
-          pnpm ci
+          pnpm install --frozen-lockfile
 
       - name: Copy architecture docs
         run: |
