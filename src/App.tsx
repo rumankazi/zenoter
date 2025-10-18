@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FileTree } from './components/FileTree/FileTree';
 import { FeatureFlagDemo } from './components/FeatureFlagDemo';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -7,6 +7,7 @@ import { PreviewToggle } from './components/PreviewToggle';
 import { NoteEditor } from './components/NoteEditor';
 import { MarkdownPreview } from './components/MarkdownPreview';
 import { ResizablePane } from './components/ResizablePane';
+import { DatabaseTester } from './components/DatabaseTester';
 import { ThemeProvider } from './context/ThemeContext';
 import styles from './App.module.css';
 
@@ -15,6 +16,7 @@ import styles from './App.module.css';
  * VS Code-like interface with resizable sidebar and optional preview
  */
 export const App: FC = () => {
+  const [testMode, setTestMode] = useState<boolean>(false); // Set to false to use normal editor
   const [noteTitle, setNoteTitle] = useState<string>('');
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
   const [noteContent, setNoteContent] = useState<string>(
@@ -61,105 +63,156 @@ export const App: FC = () => {
 
   return (
     <ThemeProvider>
-      <div className={styles.appContainer} data-testid="app-container">
-        <ResizablePane
-          left={
-            <aside className={styles.sidebar}>
-              <FileTree />
-            </aside>
-          }
-          right={
-            <main className={styles.mainContent}>
-              {/* Toolbar with note title and toggle buttons */}
-              <div className={styles.toolbar}>
-                {isEditingTitle ? (
-                  <input
-                    type="text"
-                    className={styles.noteTitleInput}
-                    value={noteTitle}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    onBlur={handleTitleBlur}
-                    onKeyDown={handleTitleKeyDown}
-                    placeholder="Enter note title..."
-                    autoFocus
-                    aria-label="Edit note title"
-                  />
-                ) : (
-                  <h1
-                    className={styles.noteTitle}
-                    onClick={() => setIsEditingTitle(true)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setIsEditingTitle(true);
-                      }
-                    }}
-                    aria-label="Note title - click to edit"
-                  >
-                    {getDisplayTitle()}
-                  </h1>
-                )}
-                <div className={styles.toolbarActions}>
-                  <PreviewToggle
-                    isVisible={showPreview}
-                    onToggle={() => setShowPreview(!showPreview)}
-                  />
-                  <ThemeToggle inline />
-                </div>
-              </div>
-
-              {/* Editor and Preview Area */}
-              <div className={styles.editorContainer}>
-                <motion.div
-                  className={styles.editorPane}
-                  layout
-                  transition={{
-                    layout: { duration: 0.3, ease: [0.4, 0.0, 0.2, 1] },
-                  }}
-                  style={{ width: showPreview ? '50%' : '100%' }}
-                >
-                  <NoteEditor
-                    value={noteContent}
-                    onChange={setNoteContent}
-                    onScroll={setEditorScrollPercentage}
-                  />
-                </motion.div>
-
-                <AnimatePresence mode="wait">
-                  {showPreview && (
-                    <motion.div
-                      className={styles.previewPane}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{
-                        duration: 0.3,
-                        ease: [0.4, 0.0, 0.2, 1],
+      {testMode ? (
+        <div className={styles.appContainer} data-testid="app-container">
+          <div
+            style={{
+              padding: '10px 20px',
+              background: 'var(--color-surface)',
+              borderBottom: '2px solid var(--color-primary)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <h2 style={{ margin: 0, color: 'var(--color-text)', fontSize: '18px' }}>
+                🧪 Database Test Mode
+              </h2>
+              <p
+                style={{
+                  margin: '4px 0 0 0',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: '12px',
+                }}
+              >
+                Test CRUD operations on SQLite database
+              </p>
+            </div>
+            <button
+              onClick={() => setTestMode(false)}
+              style={{
+                padding: '8px 16px',
+                background: 'var(--color-primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 500,
+              }}
+            >
+              ← Back to App
+            </button>
+          </div>
+          <DatabaseTester />
+        </div>
+      ) : (
+        <div className={styles.appContainer} data-testid="app-container">
+          <ResizablePane
+            left={
+              <aside className={styles.sidebar}>
+                <FileTree />
+              </aside>
+            }
+            right={
+              <main className={styles.mainContent}>
+                {/* Toolbar with note title and toggle buttons */}
+                <div className={styles.toolbar}>
+                  {isEditingTitle ? (
+                    <input
+                      type="text"
+                      className={styles.noteTitleInput}
+                      value={noteTitle}
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      onBlur={handleTitleBlur}
+                      onKeyDown={handleTitleKeyDown}
+                      placeholder="Enter note title..."
+                      autoFocus
+                      aria-label="Edit note title"
+                    />
+                  ) : (
+                    <h1
+                      className={styles.noteTitle}
+                      onClick={() => setIsEditingTitle(true)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setIsEditingTitle(true);
+                        }
                       }}
-                      style={{ width: '50%' }}
+                      aria-label="Note title - click to edit"
                     >
-                      <MarkdownPreview
-                        content={noteContent}
-                        scrollPercentage={editorScrollPercentage}
+                      {getDisplayTitle()}
+                    </h1>
+                  )}
+                  <div className={styles.toolbarActions}>
+                    <PreviewToggle
+                      isVisible={showPreview}
+                      onToggle={() => setShowPreview(!showPreview)}
+                    />
+                    <ThemeToggle inline />
+                  </div>
+                </div>
+
+                {/* Editor and Preview Area */}
+                <div className={styles.editorContainer}>
+                  {!showPreview ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className={styles.editorOnly}
+                    >
+                      <NoteEditor
+                        value={noteContent}
+                        onChange={setNoteContent}
+                        onScroll={setEditorScrollPercentage}
                       />
                     </motion.div>
+                  ) : (
+                    <ResizablePane
+                      left={
+                        <NoteEditor
+                          value={noteContent}
+                          onChange={setNoteContent}
+                          onScroll={setEditorScrollPercentage}
+                        />
+                      }
+                      right={
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeOut' }}
+                          style={{ height: '100%' }}
+                        >
+                          <MarkdownPreview
+                            content={noteContent}
+                            scrollPercentage={editorScrollPercentage}
+                          />
+                        </motion.div>
+                      }
+                      defaultSize={50}
+                      minSize={20}
+                      maxSize={80}
+                    />
                   )}
-                </AnimatePresence>
-              </div>
+                </div>
 
-              {/* Demo Section */}
-              <div className={styles.demoSection}>
-                <FeatureFlagDemo />
-              </div>
-            </main>
-          }
-          defaultSize={20}
-          minSize={15}
-          maxSize={40}
-        />
-      </div>
+                {/* Demo Section */}
+                <div className={styles.demoSection}>
+                  <FeatureFlagDemo />
+                </div>
+              </main>
+            }
+            defaultSize={20}
+            minSize={15}
+            maxSize={40}
+          />
+        </div>
+      )}
     </ThemeProvider>
   );
 };

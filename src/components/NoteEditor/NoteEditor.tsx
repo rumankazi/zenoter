@@ -9,11 +9,20 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { OnMount, loader } from '@monaco-editor/react';
 import type { editor as MonacoEditor } from 'monaco-editor';
 import { useTheme } from '../../context/ThemeContext';
 import type { NoteEditorProps, EditorOptions } from './types';
 import styles from './NoteEditor.module.css';
+
+// Configure Monaco to use local files instead of CDN
+// This is required for CSP compliance (no external script sources)
+// Vite dev server can access node_modules directly
+loader.config({
+  paths: {
+    vs: `${window.location.origin}/node_modules/monaco-editor/min/vs`,
+  },
+});
 
 /**
  * Default editor options optimized for note-taking

@@ -1,0 +1,177 @@
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: var(--font-family);
+}
+
+.title {
+  color: var(--color-text);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.electronStatus {
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.status {
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: var(--color-surface);
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--color-text);
+  font-size: 1.1rem;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.searchGroup {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchGroup .input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.button {
+  padding: 8px 16px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.smallButton {
+  padding: 4px 12px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: opacity 0.2s;
+}
+
+.smallButton:hover {
+  opacity: 0.9;
+}
+
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.noteCard {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-background);
+  transition: border-color 0.2s;
+}
+
+.noteCard:hover {
+  border-color: var(--color-primary);
+}
+
+.noteCard.selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+}
+
+.noteHeader {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.noteContent {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.noteMeta {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 40px 20px;
+  font-style: italic;
+}

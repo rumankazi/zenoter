@@ -139,15 +139,18 @@ test.describe('Content - Editor & Preview', () => {
     const initialState = await previewToggle.getAttribute('aria-pressed');
     expect(initialState).toBe('true');
 
-    // Verify both editor and preview panes exist
-    const editorPane = page.locator('[class*="editorPane"]');
-    const previewPane = page.locator('[class*="previewPane"]');
+    // Find the editorContainer which holds the editor/preview split
+    const editorContainer = page.locator('[class*="editorContainer"]');
 
-    await expect(editorPane).toBeVisible();
-    await expect(previewPane).toBeVisible();
+    // Verify ResizablePane exists within editorContainer (editor and preview split)
+    const leftPane = editorContainer.locator('[class*="leftPane"]');
+    const rightPane = editorContainer.locator('[class*="rightPane"]');
 
-    // Get initial editor width (should be ~50%)
-    const initialWidth = await editorPane.evaluate((el) => el.getBoundingClientRect().width);
+    await expect(leftPane).toBeVisible();
+    await expect(rightPane).toBeVisible();
+
+    // Get initial editor width (should be ~50% of container)
+    const initialWidth = await leftPane.evaluate((el) => el.getBoundingClientRect().width);
     const viewportWidth = await page.evaluate(() => window.innerWidth);
 
     // Editor should be roughly half width (accounting for sidebar)
@@ -157,11 +160,14 @@ test.describe('Content - Editor & Preview', () => {
     await previewToggle.click();
     await page.waitForTimeout(400); // Wait for animation
 
-    // Verify preview is hidden
-    await expect(previewPane).not.toBeVisible();
+    // Verify preview pane is hidden (no ResizablePane in editorContainer)
+    await expect(rightPane).not.toBeVisible();
 
-    // Verify editor expanded to full width
-    const expandedWidth = await editorPane.evaluate((el) => el.getBoundingClientRect().width);
+    // Verify editor expanded to full width using editorOnly class
+    const editorOnly = page.locator('[class*="editorOnly"]');
+    await expect(editorOnly).toBeVisible();
+
+    const expandedWidth = await editorOnly.evaluate((el) => el.getBoundingClientRect().width);
 
     // Editor should now be much wider (nearly full width minus sidebar)
     expect(expandedWidth).toBeGreaterThan(initialWidth * 1.5);
@@ -187,9 +193,12 @@ test.describe('Content - Editor & Preview', () => {
     await previewToggle.click();
     await page.waitForTimeout(400);
 
-    // Verify preview is hidden
-    const previewPane = page.locator('[class*="previewPane"]');
-    await expect(previewPane).not.toBeVisible();
+    // Find the editorContainer which holds the editor/preview split
+    const editorContainer = page.locator('[class*="editorContainer"]');
+
+    // Verify preview is hidden (no ResizablePane panes in editorContainer)
+    const rightPane = editorContainer.locator('[class*="rightPane"]');
+    await expect(rightPane).not.toBeVisible();
 
     // Turn preview back on
     await previewToggle.click();
@@ -198,16 +207,16 @@ test.describe('Content - Editor & Preview', () => {
     await page.waitForTimeout(100);
 
     // Verify preview becomes visible with animation
-    await expect(previewPane).toBeVisible({ timeout: 500 });
+    await expect(rightPane).toBeVisible({ timeout: 500 });
 
     // Verify both panes are now visible and side-by-side
-    const editorPane = page.locator('[class*="editorPane"]');
-    await expect(editorPane).toBeVisible();
-    await expect(previewPane).toBeVisible();
+    const leftPane = editorContainer.locator('[class*="leftPane"]');
+    await expect(leftPane).toBeVisible();
+    await expect(rightPane).toBeVisible();
 
     // Verify they're split roughly 50/50
-    const editorBox = await editorPane.boundingBox();
-    const previewBox = await previewPane.boundingBox();
+    const editorBox = await leftPane.boundingBox();
+    const previewBox = await rightPane.boundingBox();
 
     expect(editorBox).not.toBeNull();
     expect(previewBox).not.toBeNull();

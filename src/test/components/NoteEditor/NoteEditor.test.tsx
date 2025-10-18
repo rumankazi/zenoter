@@ -34,6 +34,9 @@ vi.mock('@monaco-editor/react', () => ({
       </div>
     );
   }),
+  loader: {
+    config: vi.fn(),
+  },
 }));
 
 describe('NoteEditor', () => {

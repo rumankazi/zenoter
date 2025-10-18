@@ -1,9 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', // Use relative paths for Electron production builds
   plugins: [
     react({
       jsxRuntime: 'automatic',
@@ -20,6 +22,8 @@ export default defineConfig({
         ],
       },
     }),
+    // @ts-ignore - vite-plugin-monaco-editor type issue
+    monacoEditorPlugin.default({}),
   ],
   resolve: {
     alias: {
@@ -76,6 +80,7 @@ export default defineConfig({
         'commitlint.config.js',
         'eslint.config.js',
         'vite.config.ts',
+        'src/components/DatabaseTester/**', // Temporary test component
       ],
       include: ['src/**/*.{ts,tsx}'],
       all: true,

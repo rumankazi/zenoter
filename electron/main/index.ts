@@ -1,12 +1,14 @@
 import { app, BrowserWindow, ipcMain, session } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { DatabaseService } from './database.service.js';
 
 // Handle ES modules __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
+let dbService: DatabaseService | null = null;
 
 // Check if running in development mode
 const isDev = !app.isPackaged || process.env.NODE_ENV === 'development';
@@ -53,10 +55,17 @@ function createWindow(): void {
 /**
  * App lifecycle: Ready
  */
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Initialize database
+  dbService = DatabaseService.getInstance();
+  await dbService.initialize();
+
   // Configure Content Security Policy for both dev and production
   // Following Electron Security Guide: https://electronjs.org/docs/tutorial/security
   // Reference: VS Code implementation in src/vs/code/electron-main/app.ts
+  //
+  // IMPORTANT: In development, we allow Vite dev server with HMR.
+  // In production, we enforce strict CSP with NO unsafe-inline/unsafe-eval.
 
   session.defaultSession.webRequest.onHeadersReceived(
     (
@@ -68,23 +77,23 @@ app.whenReady().then(() => {
           ...details.responseHeaders,
           'Content-Security-Policy': [
             isDev
-              ? // Development: Allow Vite HMR (no 'unsafe-inline' needed!)
+              ? // Development: Allow Vite dev server and unsafe-inline/eval for HMR
                 "default-src 'self'; " +
-                "script-src 'self'; " +
-                "style-src 'self'; " + // Vite loads CSS via <link> tags
-                "img-src 'self' data: https:; " +
-                "connect-src 'self' ws://localhost:5173 wss://localhost:5173; " + // WebSocket for HMR
-                "font-src 'self';"
-              : // Production: Strict CSP
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173; " +
+                "style-src 'self' 'unsafe-inline' http://localhost:5173; " +
+                "img-src 'self' data: http://localhost:5173; " +
+                "font-src 'self' data:; " +
+                "connect-src 'self' ws://localhost:5173 http://localhost:5173; " +
+                "worker-src 'self' blob:;"
+              : // Production: STRICT CSP - NO unsafe-inline, NO unsafe-eval
+                // All styles in CSS Modules, all scripts bundled
                 "default-src 'self'; " +
                 "script-src 'self'; " +
                 "style-src 'self'; " +
-                "img-src 'self' data: https:; " +
+                "img-src 'self' data:; " +
                 "font-src 'self' data:; " +
                 "connect-src 'self'; " +
-                "frame-src 'none'; " +
-                "object-src 'none'; " +
-                "base-uri 'self';",
+                "worker-src 'self' blob:;",
           ],
         },
       });
@@ -107,7 +116,21 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   // On macOS, apps stay active until explicitly quit
   if (process.platform !== 'darwin') {
+    // Close database connection
+    if (dbService) {
+      dbService.close();
+    }
     app.quit();
+  }
+});
+
+/**
+ * App lifecycle: Before quit
+ */
+app.on('before-quit', () => {
+  // Ensure database is closed
+  if (dbService) {
+    dbService.close();
   }
 });
 
@@ -145,4 +168,47 @@ ipcMain.handle('app:getVersion', () => {
 // Example: Get platform
 ipcMain.handle('app:getPlatform', () => {
   return process.platform;
+});
+
+// Database IPC Handlers
+ipcMain.handle('db:createNote', async (_event, input) => {
+  if (!dbService) {
+    throw new Error('Database not initialized');
+  }
+  return dbService.createNote(input);
+});
+
+ipcMain.handle('db:getNoteById', async (_event, id: number) => {
+  if (!dbService) {
+    throw new Error('Database not initialized');
+  }
+  return dbService.getNoteById(id);
+});
+
+ipcMain.handle('db:getAllNotes', async () => {
+  if (!dbService) {
+    throw new Error('Database not initialized');
+  }
+  return dbService.getAllNotes();
+});
+
+ipcMain.handle('db:updateNote', async (_event, id: number, input) => {
+  if (!dbService) {
+    throw new Error('Database not initialized');
+  }
+  return dbService.updateNote(id, input);
+});
+
+ipcMain.handle('db:deleteNote', async (_event, id: number) => {
+  if (!dbService) {
+    throw new Error('Database not initialized');
+  }
+  return dbService.deleteNote(id);
+});
+
+ipcMain.handle('db:searchNotes', async (_event, query: string) => {
+  if (!dbService) {
+    throw new Error('Database not initialized');
+  }
+  return dbService.searchNotes(query);
 });
