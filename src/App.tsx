@@ -1,14 +1,18 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileTree } from './components/FileTree/FileTree';
+import { NotesList } from './components/NotesList';
 import { FeatureFlagDemo } from './components/FeatureFlagDemo';
 import { ThemeToggle } from './components/ThemeToggle';
 import { PreviewToggle } from './components/PreviewToggle';
+import { SaveButton } from './components/SaveButton';
 import { NoteEditor } from './components/NoteEditor';
 import { MarkdownPreview } from './components/MarkdownPreview';
 import { ResizablePane } from './components/ResizablePane';
 import { DatabaseTester } from './components/DatabaseTester';
+import { Toast } from './components/Toast';
 import { ThemeProvider } from './context/ThemeContext';
+import { databaseClient, type Note } from './services/database.client';
+import { useToast, useAutoSave, useKeyboardShortcut } from './hooks';
 import styles from './App.module.css';
 
 /**
@@ -16,23 +20,211 @@ import styles from './App.module.css';
  * VS Code-like interface with resizable sidebar and optional preview
  */
 export const App: FC = () => {
-  const [testMode, setTestMode] = useState<boolean>(false); // Set to false to use normal editor
+  const [testMode, setTestMode] = useState<boolean>(false); // Set to true to use DatabaseTester
+
+  // Toast notifications
+  const toast = useToast();
+
+  // Database-backed state
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Editor state
   const [noteTitle, setNoteTitle] = useState<string>('');
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
-  const [noteContent, setNoteContent] = useState<string>(
-    '# Welcome to Zenoter\n\nA modern, animated note-taking app for developers.\n\n## Features\n\n- **Monaco Editor** - VS Code-like editing experience\n- **Markdown Support** - Full syntax highlighting\n- **IntelliSense** - Smart autocomplete\n- **Dark/Light Themes** - Toggle anytime\n- **Split View** - Live preview with resizable panes\n\n## Try It Out\n\nStart typing markdown here! Try:\n- Headings with `#`\n- **Bold** with `**text**`\n- *Italic* with `*text*`\n- Code blocks with triple backticks\n\n```javascript\nconst greeting = () => {\n  console.log("Hello, Zenoter!");\n};\n```\n\n---\n\n**Sprint 1 Progress**: 98% Complete ✅'
-  );
+  const [noteContent, setNoteContent] = useState<string>('');
   const [showPreview, setShowPreview] = useState<boolean>(true);
   const [editorScrollPercentage, setEditorScrollPercentage] = useState<number>(0);
 
-  // Extract title from first line of content if title is empty
+  // Save state
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [lastSavedContent, setLastSavedContent] = useState<string>('');
+  const [lastSavedTitle, setLastSavedTitle] = useState<string>('');
+
+  // Load all notes on mount
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (selectedNote) {
+      const contentChanged = noteContent !== lastSavedContent;
+      const titleChanged = noteTitle !== lastSavedTitle;
+      setHasUnsavedChanges(contentChanged || titleChanged);
+    }
+  }, [noteContent, noteTitle, lastSavedContent, lastSavedTitle, selectedNote]);
+
+  const loadNotes = async () => {
+    try {
+      setIsLoading(true);
+      const allNotes = await databaseClient.getAllNotes();
+      setNotes(allNotes);
+
+      // If no note is selected and there are notes, select the first one
+      if (!selectedNote && allNotes.length > 0) {
+        handleNoteSelect(allNotes[0]);
+      } else if (allNotes.length === 0) {
+        // Create first note if database is empty
+        await handleNoteCreate();
+      }
+    } catch (error) {
+      console.error('Failed to load notes:', error);
+      toast.error('Failed to load notes. Please refresh the page.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNoteSelect = (note: Note) => {
+    setSelectedNote(note);
+    setNoteTitle(note.title);
+    setNoteContent(note.content);
+    setLastSavedTitle(note.title);
+    setLastSavedContent(note.content);
+    setHasUnsavedChanges(false);
+    setIsEditingTitle(false);
+  };
+
+  const handleSave = async () => {
+    if (!selectedNote || !hasUnsavedChanges) return;
+
+    try {
+      setIsSaving(true);
+      const updated = await databaseClient.updateNote(selectedNote.id, {
+        title: noteTitle,
+        content: noteContent,
+      });
+
+      if (updated) {
+        // Update notes list
+        setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+        setSelectedNote(updated);
+        setLastSavedTitle(updated.title);
+        setLastSavedContent(updated.content);
+        setHasUnsavedChanges(false);
+      }
+    } catch (error) {
+      console.error('Failed to save note:', error);
+      toast.error('Failed to save note. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Keyboard shortcut: Ctrl+S to save
+  useKeyboardShortcut({
+    key: 's',
+    ctrlKey: true,
+    handler: () => {
+      if (hasUnsavedChanges && selectedNote) {
+        handleSave();
+      }
+    },
+    enabled: !!selectedNote && hasUnsavedChanges,
+  });
+
+  // Auto-save after 500ms of inactivity
+  useAutoSave({
+    value: noteContent + noteTitle,
+    onSave: handleSave,
+    delay: 500,
+    enabled: hasUnsavedChanges && !!selectedNote,
+  });
+
+  const handleNoteCreate = async () => {
+    try {
+      const newNote = await databaseClient.createNote({
+        title: 'Untitled Note',
+        content: '# New Note\n\nStart writing...',
+      });
+      setNotes((prev) => [newNote, ...prev]); // Add to beginning
+      handleNoteSelect(newNote);
+    } catch (error) {
+      console.error('Failed to create note:', error);
+      toast.error('Failed to create note. Please try again.');
+    }
+  };
+
+  const handleNoteDelete = async (id: number) => {
+    try {
+      const success = await databaseClient.deleteNote(id);
+      if (success) {
+        setNotes((prev) => prev.filter((n) => n.id !== id));
+
+        // If deleted note was selected, select another note
+        if (selectedNote?.id === id) {
+          const remaining = notes.filter((n) => n.id !== id);
+          if (remaining.length > 0) {
+            handleNoteSelect(remaining[0]);
+          } else {
+            // Create a new note if all were deleted
+            await handleNoteCreate();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+      toast.error('Failed to delete note. Please try again.');
+    }
+  };
+
+  const handleContentChange = (newContent: string) => {
+    // Just update the local state - auto-save will handle database updates
+    setNoteContent(newContent);
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    setNoteTitle(newTitle);
+  };
+
+  const handleTitleBlur = async () => {
+    setIsEditingTitle(false);
+
+    // Save title to database
+    if (selectedNote && noteTitle !== selectedNote.title) {
+      try {
+        const updated = await databaseClient.updateNote(selectedNote.id, {
+          title: noteTitle,
+        });
+
+        if (updated) {
+          setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+          setSelectedNote(updated);
+        }
+      } catch (error) {
+        console.error('Failed to save title:', error);
+        toast.error('Failed to save title. Please try again.');
+      }
+    }
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleTitleBlur();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      // Revert to original title
+      if (selectedNote) {
+        setNoteTitle(selectedNote.title);
+      }
+      setIsEditingTitle(false);
+    }
+  };
+
   const getDisplayTitle = (): string => {
-    if (noteTitle.trim()) {
-      return noteTitle;
+    const title = typeof noteTitle === 'string' ? noteTitle : '';
+
+    if (title.trim()) {
+      return title;
     }
 
     // Extract first line from content
-    const firstLine = noteContent.split('\n')[0].trim();
+    const content = typeof noteContent === 'string' ? noteContent : '';
+    const firstLine = content.split('\n')[0].trim();
 
     // Remove markdown heading symbols
     const cleanedLine = firstLine.replace(/^#+\s*/, '');
@@ -40,29 +232,13 @@ export const App: FC = () => {
     return cleanedLine || 'Untitled Note';
   };
 
-  const handleTitleChange = (newTitle: string) => {
-    setNoteTitle(newTitle);
-  };
-
-  const handleTitleBlur = () => {
-    setIsEditingTitle(false);
-    // If title is empty after editing, it will fall back to first line automatically
-  };
-
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setIsEditingTitle(false);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      // Revert to previous title (empty string will fallback to first line)
-      setNoteTitle('');
-      setIsEditingTitle(false);
-    }
-  };
-
   return (
     <ThemeProvider>
+      {/* Toast Notifications */}
+      {toast.toasts.map((t) => (
+        <Toast key={t.id} message={t.message} type={t.type} onClose={() => toast.hideToast(t.id)} />
+      ))}
+
       {testMode ? (
         <div className={styles.appContainer} data-testid="app-container">
           <div
@@ -112,7 +288,14 @@ export const App: FC = () => {
           <ResizablePane
             left={
               <aside className={styles.sidebar}>
-                <FileTree />
+                <NotesList
+                  notes={notes}
+                  selectedNoteId={selectedNote?.id || null}
+                  onNoteSelect={handleNoteSelect}
+                  onNoteCreate={handleNoteCreate}
+                  onNoteDelete={handleNoteDelete}
+                  isLoading={isLoading}
+                />
               </aside>
             }
             right={
@@ -149,6 +332,11 @@ export const App: FC = () => {
                     </h1>
                   )}
                   <div className={styles.toolbarActions}>
+                    <SaveButton
+                      hasUnsavedChanges={hasUnsavedChanges}
+                      onSave={handleSave}
+                      isSaving={isSaving}
+                    />
                     <PreviewToggle
                       isVisible={showPreview}
                       onToggle={() => setShowPreview(!showPreview)}
@@ -168,7 +356,7 @@ export const App: FC = () => {
                     >
                       <NoteEditor
                         value={noteContent}
-                        onChange={setNoteContent}
+                        onChange={handleContentChange}
                         onScroll={setEditorScrollPercentage}
                       />
                     </motion.div>
@@ -177,7 +365,7 @@ export const App: FC = () => {
                       left={
                         <NoteEditor
                           value={noteContent}
-                          onChange={setNoteContent}
+                          onChange={handleContentChange}
                           onScroll={setEditorScrollPercentage}
                         />
                       }

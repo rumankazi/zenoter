@@ -104,43 +104,44 @@ test.describe('Layout - Structure & Responsive', () => {
     }
   });
 
-  test('should have FileTree inside sidebar', async ({ page }) => {
+  test('should have NotesList inside sidebar', async ({ page }) => {
     const sidebar = page.locator('aside');
-    const fileTree = page.getByRole('tree', { name: 'File tree navigation' });
+    const createButton = page.getByRole('button', { name: 'Create new note' });
 
     await expect(sidebar).toBeVisible();
-    await expect(fileTree).toBeVisible();
+    await expect(createButton).toBeVisible();
 
     // Wait for Framer Motion animations to complete (deterministic)
     await page.waitForFunction(
-      ([sidebarSelector, fileTreeSelector]) => {
-        const sidebar = document.querySelector(sidebarSelector);
-        const fileTree = document.querySelector(fileTreeSelector);
-        if (!sidebar || !fileTree) return false;
+      () => {
+        const sidebar = document.querySelector('aside');
+        const createBtn = document.querySelector('[aria-label="Create new note"]');
+        if (!sidebar || !createBtn) return false;
         const sidebarBox = sidebar.getBoundingClientRect();
-        const treeBox = fileTree.getBoundingClientRect();
-        // FileTree should be inside sidebar bounds (with tolerance for animations)
+        const btnBox = createBtn.getBoundingClientRect();
+        // NotesList (create button) should be inside sidebar bounds (with tolerance for animations)
         return (
-          treeBox.x >= sidebarBox.x - 1 &&
-          treeBox.x + treeBox.width <= sidebarBox.x + sidebarBox.width + 5 &&
-          treeBox.y >= sidebarBox.y - 10
+          btnBox.x >= sidebarBox.x - 1 &&
+          btnBox.x + btnBox.width <= sidebarBox.x + sidebarBox.width + 5 &&
+          btnBox.y >= sidebarBox.y - 10
         );
       },
-      ['aside', '[role="tree"][aria-label="File tree navigation"]'],
       { timeout: 5000 }
     );
 
     const sidebarBox = await sidebar.boundingBox();
-    const treeBox = await fileTree.boundingBox();
+    const createBtnBox = await createButton.boundingBox();
 
     expect(sidebarBox).not.toBeNull();
-    expect(treeBox).not.toBeNull();
+    expect(createBtnBox).not.toBeNull();
 
-    if (sidebarBox && treeBox) {
-      // FileTree should be inside sidebar bounds (with tolerance for animations)
-      expect(treeBox.x).toBeGreaterThanOrEqual(sidebarBox.x - 1);
-      expect(treeBox.x + treeBox.width).toBeLessThanOrEqual(sidebarBox.x + sidebarBox.width + 5);
-      expect(treeBox.y).toBeGreaterThanOrEqual(sidebarBox.y - 10); // Tolerance for animation transforms
+    if (sidebarBox && createBtnBox) {
+      // NotesList should be inside sidebar bounds (with tolerance for animations)
+      expect(createBtnBox.x).toBeGreaterThanOrEqual(sidebarBox.x - 1);
+      expect(createBtnBox.x + createBtnBox.width).toBeLessThanOrEqual(
+        sidebarBox.x + sidebarBox.width + 5
+      );
+      expect(createBtnBox.y).toBeGreaterThanOrEqual(sidebarBox.y - 10); // Tolerance for animation transforms
     }
   });
 

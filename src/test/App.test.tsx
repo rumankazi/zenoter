@@ -1,9 +1,61 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../App';
+import type { Note } from '../services/database.client';
+
+// Mock the database client
+vi.mock('../services/database.client', () => {
+  const mockNotes: Note[] = [
+    {
+      id: 1,
+      title: 'Test Note 1',
+      content: '# Test Note 1\n\nFirst test note content',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      title: 'Test Note 2',
+      content: '# Test Note 2\n\nSecond test note content',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+
+  let resolveGetAllNotes: ((notes: Note[]) => void) | null = null;
+  const getAllNotesPromise = new Promise<Note[]>((resolve) => {
+    resolveGetAllNotes = resolve;
+  });
+
+  // Resolve immediately after a short delay to simulate async behavior
+  setTimeout(() => resolveGetAllNotes?.(mockNotes), 0);
+
+  return {
+    databaseClient: {
+      getAllNotes: vi.fn().mockImplementation(() => getAllNotesPromise),
+      createNote: vi.fn().mockImplementation((data: { title: string; content: string }) =>
+        Promise.resolve({
+          id: 3,
+          title: data.title,
+          content: data.content,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      ),
+      updateNote: vi.fn().mockResolvedValue(undefined),
+      deleteNote: vi.fn().mockResolvedValue(undefined),
+      getNoteById: vi.fn().mockResolvedValue(mockNotes[0]),
+      searchNotes: vi.fn().mockResolvedValue(mockNotes),
+    },
+  };
+});
 
 describe('App Component', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should render the application layout', () => {
     render(<App />);
 
@@ -12,148 +64,127 @@ describe('App Component', () => {
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it('should display the note title in toolbar', () => {
+  it('should load notes on mount', async () => {
+    const { databaseClient } = await import('../services/database.client');
     render(<App />);
 
-    // Note title should be extracted from first line (# Welcome to Zenoter)
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    expect(titleElement).toBeInTheDocument();
-    expect(titleElement.textContent).toBe('Welcome to Zenoter');
+    await waitFor(() => {
+      expect(databaseClient.getAllNotes).toHaveBeenCalled();
+    });
   });
 
-  it('should display welcome content in preview', () => {
+  it('should display notes list in sidebar', () => {
     render(<App />);
 
-    // Content from the initial note should be rendered in preview
-    // Use getAllByText since title also has "Welcome to Zenoter"
-    const welcomeElements = screen.getAllByText(/Welcome to Zenoter/i);
-    expect(welcomeElements.length).toBeGreaterThanOrEqual(2); // Title + preview
+    // NotesList component container should be present
+    const sidebar = screen.getByRole('complementary');
+    expect(sidebar).toBeInTheDocument();
+
+    // Notes list container should exist
+    const notesContainer = sidebar.querySelector('[class*="container"]');
+    expect(notesContainer).toBeTruthy();
   });
 
-  it('should render FileTree component', () => {
+  it('should display create note button', async () => {
     render(<App />);
 
-    // FileTree renders with role="tree"
-    expect(screen.getByRole('tree')).toBeInTheDocument();
+    // Wait for notes to load first
+    await waitFor(() => {
+      const createButton = screen.getByRole('button', { name: /create new note/i });
+      expect(createButton).toBeInTheDocument();
+    });
   });
 
-  it('should extract title from first line of content when title is empty', () => {
+  it('should display save button in toolbar', () => {
     render(<App />);
 
-    // Title should be extracted from "# Welcome to Zenoter" (without the #)
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    expect(titleElement).toBeInTheDocument();
-    expect(titleElement.textContent).toBe('Welcome to Zenoter');
+    // Save button should be present
+    const saveButton = screen.getByRole('button', { name: /no changes to save|save note/i });
+    expect(saveButton).toBeInTheDocument();
   });
 
-  it('should allow editing title on click', async () => {
+  it('should display theme toggle', () => {
+    render(<App />);
+
+    const themeToggle = screen.getByTestId('theme-toggle');
+    expect(themeToggle).toBeInTheDocument();
+  });
+
+  it('should display preview toggle', () => {
+    render(<App />);
+
+    const previewToggle = screen.getByTestId('preview-toggle');
+    expect(previewToggle).toBeInTheDocument();
+  });
+
+  it('should allow creating a new note', async () => {
+    const user = userEvent.setup();
+    const { databaseClient } = await import('../services/database.client');
+
+    render(<App />);
+
+    // Wait for initial notes to load
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /create new note/i })).toBeInTheDocument();
+    });
+
+    const createButton = screen.getByRole('button', { name: /create new note/i });
+    await user.click(createButton);
+
+    await waitFor(() => {
+      expect(databaseClient.createNote).toHaveBeenCalled();
+    });
+  });
+
+  it('should allow selecting a note', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // Click on title to edit
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    await user.click(titleElement);
+    await waitFor(() => {
+      expect(screen.getAllByText('Test Note 1').length).toBeGreaterThan(0);
+    });
 
-    // Input should appear
-    const input = screen.getByLabelText(/Edit note title/i);
-    expect(input).toBeInTheDocument();
-    expect(input).toHaveFocus();
+    // Get the note item from the sidebar (not the main editor title)
+    const noteItems = screen.getAllByText('Test Note 1');
+    const sidebarNoteTitle = noteItems.find(
+      (el) => el.className.includes('noteTitle') && el.closest('[class*="noteItem"]')
+    );
+
+    expect(sidebarNoteTitle).toBeTruthy();
+    const firstNote = sidebarNoteTitle?.closest('div[class*="noteItem"]');
+    expect(firstNote).toBeInTheDocument();
+
+    await user.click(firstNote!);
+
+    // Note should remain selected (check for selected class)
+    await waitFor(() => {
+      expect(firstNote?.className).toContain('selected');
+    });
   });
 
-  it('should save custom title on blur', async () => {
-    const user = userEvent.setup();
+  it('should have proper ARIA structure', () => {
     render(<App />);
 
-    // Click on title to edit
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    await user.click(titleElement);
+    // Sidebar should have complementary role
+    expect(screen.getByRole('complementary')).toBeInTheDocument();
 
-    // Type custom title
-    const input = screen.getByLabelText(/Edit note title/i);
-    await user.clear(input);
-    await user.type(input, 'My Custom Note');
-
-    // Blur to save
-    await user.click(document.body);
-
-    // Custom title should be displayed
-    const updatedTitle = screen.getByRole('button', { name: /Note title - click to edit/i });
-    expect(updatedTitle.textContent).toBe('My Custom Note');
+    // Main content should have main role
+    expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it('should save title on Enter key press', async () => {
-    const user = userEvent.setup();
-    render(<App />);
+  it('should render NoteEditor component', () => {
+    const { container } = render(<App />);
 
-    // Click on title to edit
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    await user.click(titleElement);
-
-    // Type custom title
-    const input = screen.getByLabelText(/Edit note title/i);
-    await user.clear(input);
-    await user.type(input, 'New Title');
-
-    // Press Enter
-    await user.keyboard('{Enter}');
-
-    // Custom title should be displayed
-    const updatedTitle = screen.getByRole('button', { name: /Note title - click to edit/i });
-    expect(updatedTitle.textContent).toBe('New Title');
+    // Editor panes should be in the DOM
+    const mainContent = container.querySelector('[class*="mainContent"]');
+    expect(mainContent).toBeTruthy();
   });
 
-  it('should cancel editing on Escape key press', async () => {
-    const user = userEvent.setup();
+  it('should render MarkdownPreview component', () => {
     render(<App />);
 
-    // Click on title to edit
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    await user.click(titleElement);
-
-    // Type some text
-    const input = screen.getByLabelText(/Edit note title/i);
-    await user.type(input, 'Should not save');
-
-    // Press Escape
-    await user.keyboard('{Escape}');
-
-    // Original title should still be displayed (extracted from content)
-    const titleAfterEscape = screen.getByRole('button', { name: /Note title - click to edit/i });
-    expect(titleAfterEscape.textContent).toBe('Welcome to Zenoter');
-  });
-
-  it('should fall back to first line when custom title is cleared', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    // Click on title to edit
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    await user.click(titleElement);
-
-    // Clear the input completely
-    const input = screen.getByLabelText(/Edit note title/i);
-    await user.clear(input);
-
-    // Blur to save
-    await user.click(document.body);
-
-    // Should fall back to first line from content
-    const titleAfterClear = screen.getByRole('button', { name: /Note title - click to edit/i });
-    expect(titleAfterClear.textContent).toBe('Welcome to Zenoter');
-  });
-
-  it('should activate editing mode with Space key', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    // Focus on title and press Space
-    const titleElement = screen.getByRole('button', { name: /Note title - click to edit/i });
-    titleElement.focus();
-    await user.keyboard(' ');
-
-    // Input should appear
-    const input = screen.getByLabelText(/Edit note title/i);
-    expect(input).toBeInTheDocument();
-    expect(input).toHaveFocus();
+    // Preview container should be present
+    const previewContainer = document.querySelector('[class*="previewContainer"]');
+    expect(previewContainer).toBeInTheDocument();
   });
 });

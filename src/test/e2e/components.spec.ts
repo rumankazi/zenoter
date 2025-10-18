@@ -5,48 +5,61 @@
 
 import { test, expect } from '@playwright/test';
 
-test.describe('Components - FileTree', () => {
+test.describe('Components - NotesList', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:5173');
     await page.waitForSelector('[data-testid="app-container"]', { state: 'visible' });
   });
 
-  test('should render FileTree with correct structure', async ({ page }) => {
-    const fileTree = page.getByRole('tree', { name: 'File tree navigation' });
-    await expect(fileTree).toBeVisible();
+  test('should render NotesList with correct structure', async ({ page }) => {
+    // Wait for NotesList to load (create button should always be visible)
+    await page.waitForFunction(
+      () => {
+        const createButton = document.querySelector('[aria-label="Create new note"]');
+        return createButton !== null;
+      },
+      { timeout: 5000 }
+    );
 
-    // Should have root "Notes" item
-    const rootItem = page.getByRole('treeitem', { name: 'Notes' });
-    await expect(rootItem).toBeVisible();
+    const createButton = page.getByRole('button', { name: 'Create new note' });
+    await expect(createButton).toBeVisible();
+
+    // In browser mode (without Electron), database won't work, so notes may not appear
+    // Just verify the NotesList container is rendered
+    const sidebar = page.locator('aside');
+    await expect(sidebar).toBeVisible();
   });
 
   test('should have proper ARIA attributes', async ({ page }) => {
-    const fileTree = page.getByRole('tree');
-    await expect(fileTree).toHaveAttribute('role', 'tree');
+    // Wait for create button
+    const createButton = page.getByRole('button', { name: 'Create new note' });
+    await expect(createButton).toBeVisible();
 
-    const ariaLabel = await fileTree.getAttribute('aria-label');
-    expect(ariaLabel).toBeTruthy();
-    expect(ariaLabel).toContain('tree');
+    const ariaLabel = await createButton.getAttribute('aria-label');
+    expect(ariaLabel).toBe('Create new note');
+
+    // Note: Delete buttons only appear if notes exist (requires Electron database)
+    // This test verifies the create button ARIA attributes which always exist
   });
 
   test('should be inside sidebar', async ({ page }) => {
     const sidebar = page.locator('aside');
-    const fileTree = page.getByRole('tree');
+    const createButton = page.getByRole('button', { name: 'Create new note' });
 
     await expect(sidebar).toBeVisible();
-    await expect(fileTree).toBeVisible();
+    await expect(createButton).toBeVisible();
 
-    // Wait for animations to complete
+    // Wait for animations to complete and verify NotesList is inside sidebar
     await page.waitForFunction(
       () => {
         const sidebar = document.querySelector('aside');
-        const tree = document.querySelector('[role="tree"]');
-        if (!sidebar || !tree) return false;
+        const createBtn = document.querySelector('[aria-label="Create new note"]');
+        if (!sidebar || !createBtn) return false;
         const sidebarBox = sidebar.getBoundingClientRect();
-        const treeBox = tree.getBoundingClientRect();
+        const btnBox = createBtn.getBoundingClientRect();
         return (
-          treeBox.x >= sidebarBox.x - 1 &&
-          treeBox.x + treeBox.width <= sidebarBox.x + sidebarBox.width + 5
+          btnBox.x >= sidebarBox.x - 1 &&
+          btnBox.x + btnBox.width <= sidebarBox.x + sidebarBox.width + 5
         );
       },
       { timeout: 5000 }
@@ -54,13 +67,13 @@ test.describe('Components - FileTree', () => {
   });
 
   test('should have animation on render', async ({ page }) => {
-    const fileTree = page.getByRole('tree');
+    // NotesList container should be rendered with Framer Motion
+    const sidebar = page.locator('aside');
+    await expect(sidebar).toBeVisible();
 
-    // Framer Motion should make element visible with fade-in
-    await expect(fileTree).toBeVisible();
-
-    // Element should have content after animation completes
-    await expect(fileTree).toContainText('Notes');
+    // Create button should be visible (has Framer Motion on parent)
+    const createButton = page.getByRole('button', { name: 'Create new note' });
+    await expect(createButton).toBeVisible({ timeout: 3000 });
   });
 });
 

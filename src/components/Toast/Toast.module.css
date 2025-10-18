@@ -1,0 +1,86 @@
+/**
+ * Toast Styles - Minimalistic Monochrome Glass
+ * CSS Modules for CSP compliance
+ */
+
+.toast {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+
+  /* Monochrome glass effect */
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  /* Subtle border - no colors */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 0 1px rgba(0, 0, 0, 0.2);
+
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 500px;
+
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Light theme adjustments */
+[data-theme='light'] .toast {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.85);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* All monochrome - no colored variants */
+.icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0.9;
+}
+
+.message {
+  flex: 1;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.closeButton {
+  flex-shrink: 0;
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='light'] .closeButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.closeButton:active {
+  transform: scale(0.95);
+}
