@@ -60,7 +60,7 @@ jobs:
 
           # Run dry-run and capture output
           set +e
-          pnpm exec semantic-release --dry-run --debug 2>&1 | tee dry-run.log
+          pnpm exec semantic-release --dry-run --no-ci --debug 2>&1 | tee dry-run.log
           EXIT_CODE=${PIPESTATUS[0]}
           set -e
 
