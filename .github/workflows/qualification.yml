@@ -15,10 +15,72 @@ permissions:
   statuses: write
 
 jobs:
+  # Job 0: Detect Changes
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      tests: ${{ steps.filter.outputs.tests }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      docs: ${{ steps.filter.outputs.docs }}
+      config: ${{ steps.filter.outputs.config }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Check changed files
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**/*.{ts,tsx}'
+              - 'electron/**/*.ts'
+              - '!src/test/**'
+              - '!**/*.test.{ts,tsx}'
+              - '!**/*.spec.{ts,tsx}'
+              - '!**/*.e2e.{ts,tsx}'
+            tests:
+              - 'src/test/**/*.{test,spec}.{ts,tsx}'
+              - 'src/test/setup.ts'
+            e2e:
+              - 'src/test/e2e/**/*.e2e.{ts,tsx}'
+              - 'playwright.config.ts'
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - 'README.md'
+              - '.github/instructions/**'
+            config:
+              - '*.json'
+              - '*.config.{js,ts,cjs,mjs}'
+              - 'tsconfig*.json'
+              - '.nvmrc'
+              - '.prettierrc'
+              - '.eslintrc*'
+              - 'electron-builder.yml'
+            workflows:
+              - '.github/workflows/**'
+            dependencies:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+
   # Job 1: Code Quality Checks
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Run on: code changes, config changes, workflow changes, or scheduled runs
+    if: |
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.tests == 'true' ||
+      needs.detect-changes.outputs.config == 'true' ||
+      needs.detect-changes.outputs.workflows == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -56,6 +118,15 @@ jobs:
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Run on: code changes, config changes, or scheduled runs
+    if: |
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.tests == 'true' ||
+      needs.detect-changes.outputs.e2e == 'true' ||
+      needs.detect-changes.outputs.config == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -80,6 +151,14 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Run on: code changes, test changes, or dependencies changes
+    if: |
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.tests == 'true' ||
+      needs.detect-changes.outputs.dependencies == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -110,6 +189,14 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Run on: code changes, E2E test changes, or dependencies changes (skip for docs-only)
+    if: |
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.e2e == 'true' ||
+      needs.detect-changes.outputs.dependencies == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -145,6 +232,14 @@ jobs:
   build:
     name: Build Verification
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Run on: code changes, config changes, or dependencies changes
+    if: |
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.config == 'true' ||
+      needs.detect-changes.outputs.dependencies == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -176,6 +271,12 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Run on: dependency changes, or scheduled runs only
+    if: |
+      needs.detect-changes.outputs.dependencies == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -197,39 +298,82 @@ jobs:
         run: pnpm audit --audit-level moderate
         continue-on-error: true
 
-  # Job 7: Status Summary
+  # Job 7: Status Summary (Required Check)
   status-summary:
     name: Status Summary
     runs-on: ubuntu-latest
-    needs: [code-quality, type-check, test, e2e-tests, build, security]
+    needs: [detect-changes, code-quality, type-check, test, e2e-tests, build, security]
     if: always()
     steps:
       - name: Check job statuses
+        id: check
         run: |
-          echo "Code Quality: ${{ needs.code-quality.result }}"
-          echo "Type Check: ${{ needs.type-check.result }}"
-          echo "Tests: ${{ needs.test.result }}"
-          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
-          echo "Build: ${{ needs.build.result }}"
-          echo "Security: ${{ needs.security.result }}"
+          echo "## Job Execution Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-      - name: Verify all jobs passed
-        if: |
-          needs.code-quality.result != 'success' ||
-          needs.type-check.result != 'success' ||
-          needs.test.result != 'success' ||
-          needs.e2e-tests.result != 'success' ||
-          needs.build.result != 'success'
-        run: |
-          echo "::error::One or more qualification checks failed"
-          exit 1
+          # Helper function to check job result
+          check_job() {
+            local job_name="$1"
+            local job_result="$2"
+            local was_skipped="$3"
+            
+            if [ "$was_skipped" = "true" ]; then
+              echo "- ⏭️  **$job_name**: Skipped (no relevant changes)" >> $GITHUB_STEP_SUMMARY
+              echo "$job_name=skipped" >> $GITHUB_OUTPUT
+              return 0
+            elif [ "$job_result" = "success" ]; then
+              echo "- ✅ **$job_name**: Passed" >> $GITHUB_STEP_SUMMARY
+              echo "$job_name=success" >> $GITHUB_OUTPUT
+              return 0
+            elif [ "$job_result" = "skipped" ]; then
+              echo "- ⏭️  **$job_name**: Skipped" >> $GITHUB_STEP_SUMMARY
+              echo "$job_name=skipped" >> $GITHUB_OUTPUT
+              return 0
+            else
+              echo "- ❌ **$job_name**: Failed" >> $GITHUB_STEP_SUMMARY
+              echo "$job_name=failed" >> $GITHUB_OUTPUT
+              return 1
+            fi
+          }
 
-      - name: Success
-        if: |
-          needs.code-quality.result == 'success' &&
-          needs.type-check.result == 'success' &&
-          needs.test.result == 'success' &&
-          needs.e2e-tests.result == 'success' &&
-          needs.build.result == 'success'
+          # Track if any required job failed
+          all_passed=true
+
+          # Check each job (skipped jobs are treated as success)
+          check_job "Code Quality" "${{ needs.code-quality.result }}" "false" || all_passed=false
+          check_job "Type Check" "${{ needs.type-check.result }}" "false" || all_passed=false
+          check_job "Tests" "${{ needs.test.result }}" "false" || all_passed=false
+          check_job "E2E Tests" "${{ needs.e2e-tests.result }}" "false" || all_passed=false
+          check_job "Build" "${{ needs.build.result }}" "false" || all_passed=false
+          check_job "Security" "${{ needs.security.result }}" "false" || all_passed=false
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Changed File Categories" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Code: ${{ needs.detect-changes.outputs.code }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: ${{ needs.detect-changes.outputs.tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E: ${{ needs.detect-changes.outputs.e2e }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Docs: ${{ needs.detect-changes.outputs.docs }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Config: ${{ needs.detect-changes.outputs.config }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Workflows: ${{ needs.detect-changes.outputs.workflows }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependencies: ${{ needs.detect-changes.outputs.dependencies }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$all_passed" = "false" ]; then
+            echo "all_passed=false" >> $GITHUB_OUTPUT
+          else
+            echo "all_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify required jobs passed
         run: |
-          echo "✅ All status checks passed!"
+          # Fail if any job explicitly failed (not skipped)
+          if [[ "${{ needs.code-quality.result }}" == "failure" ]] ||
+             [[ "${{ needs.type-check.result }}" == "failure" ]] ||
+             [[ "${{ needs.test.result }}" == "failure" ]] ||
+             [[ "${{ needs.e2e-tests.result }}" == "failure" ]] ||
+             [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "::error::One or more required qualification checks failed"
+            exit 1
+          fi
+
+          echo "✅ All required status checks passed or skipped!"

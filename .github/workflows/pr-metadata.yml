@@ -24,9 +24,11 @@ jobs:
           if [ -z "$commits" ]; then
             commits="- No commits found"
           fi
-          echo "list<<EOF" >> $GITHUB_OUTPUT
-          echo "$commits" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "list<<EOF"
+            echo "$commits"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Detect change type
         id: type
@@ -34,21 +36,29 @@ jobs:
           commit_messages=$(git log origin/main..HEAD --pretty=format:"%s%n%b")
 
           if echo "$commit_messages" | grep -qE "BREAKING CHANGE|^[a-z]+(\([a-z]+\))?!:"; then
-            echo "type=major" >> $GITHUB_OUTPUT
-            echo "icon=🚨" >> $GITHUB_OUTPUT
-            echo "badge=Major Release" >> $GITHUB_OUTPUT
+            {
+              echo "type=major"
+              echo "icon=🚨"
+              echo "badge=Major Release"
+            } >> "$GITHUB_OUTPUT"
           elif echo "$commit_messages" | grep -qE "^feat(\([a-z]+\))?:"; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-            echo "icon=✨" >> $GITHUB_OUTPUT
-            echo "badge=Minor Release" >> $GITHUB_OUTPUT
+            {
+              echo "type=minor"
+              echo "icon=✨"
+              echo "badge=Minor Release"
+            } >> "$GITHUB_OUTPUT"
           elif echo "$commit_messages" | grep -qE "^fix(\([a-z]+\))?:"; then
-            echo "type=patch" >> $GITHUB_OUTPUT
-            echo "icon=🐛" >> $GITHUB_OUTPUT
-            echo "badge=Patch Release" >> $GITHUB_OUTPUT
+            {
+              echo "type=patch"
+              echo "icon=🐛"
+              echo "badge=Patch Release"
+            } >> "$GITHUB_OUTPUT"
           else
-            echo "type=none" >> $GITHUB_OUTPUT
-            echo "icon=📝" >> $GITHUB_OUTPUT
-            echo "badge=No Release" >> $GITHUB_OUTPUT
+            {
+              echo "type=none"
+              echo "icon=📝"
+              echo "badge=No Release"
+            } >> "$GITHUB_OUTPUT"
           fi
 
       - name: Count changes by type
@@ -56,23 +66,36 @@ jobs:
         run: |
           commit_messages=$(git log origin/main..HEAD --pretty=format:"%s")
 
-          feat_count=$(echo "$commit_messages" | grep -cE "^feat(\([a-z]+\))?:" || echo "0")
-          fix_count=$(echo "$commit_messages" | grep -cE "^fix(\([a-z]+\))?:" || echo "0")
-          docs_count=$(echo "$commit_messages" | grep -cE "^docs(\([a-z]+\))?:" || echo "0")
-          test_count=$(echo "$commit_messages" | grep -cE "^test(\([a-z]+\))?:" || echo "0")
-          refactor_count=$(echo "$commit_messages" | grep -cE "^refactor(\([a-z]+\))?:" || echo "0")
-          style_count=$(echo "$commit_messages" | grep -cE "^style(\([a-z]+\))?:" || echo "0")
-          perf_count=$(echo "$commit_messages" | grep -cE "^perf(\([a-z]+\))?:" || echo "0")
-          chore_count=$(echo "$commit_messages" | grep -cE "^chore(\([a-z]+\))?:" || echo "0")
+          # Use grep with || true to avoid non-zero exit codes, then default to 0
+          feat_count=$(echo "$commit_messages" | grep -cE "^feat(\([a-z]+\))?:" || true)
+          fix_count=$(echo "$commit_messages" | grep -cE "^fix(\([a-z]+\))?:" || true)
+          docs_count=$(echo "$commit_messages" | grep -cE "^docs(\([a-z]+\))?:" || true)
+          test_count=$(echo "$commit_messages" | grep -cE "^test(\([a-z]+\))?:" || true)
+          refactor_count=$(echo "$commit_messages" | grep -cE "^refactor(\([a-z]+\))?:" || true)
+          style_count=$(echo "$commit_messages" | grep -cE "^style(\([a-z]+\))?:" || true)
+          perf_count=$(echo "$commit_messages" | grep -cE "^perf(\([a-z]+\))?:" || true)
+          chore_count=$(echo "$commit_messages" | grep -cE "^chore(\([a-z]+\))?:" || true)
 
-          echo "feat=$feat_count" >> $GITHUB_OUTPUT
-          echo "fix=$fix_count" >> $GITHUB_OUTPUT
-          echo "docs=$docs_count" >> $GITHUB_OUTPUT
-          echo "test=$test_count" >> $GITHUB_OUTPUT
-          echo "refactor=$refactor_count" >> $GITHUB_OUTPUT
-          echo "style=$style_count" >> $GITHUB_OUTPUT
-          echo "perf=$perf_count" >> $GITHUB_OUTPUT
-          echo "chore=$chore_count" >> $GITHUB_OUTPUT
+          # Default to 0 if empty
+          feat_count=${feat_count:-0}
+          fix_count=${fix_count:-0}
+          docs_count=${docs_count:-0}
+          test_count=${test_count:-0}
+          refactor_count=${refactor_count:-0}
+          style_count=${style_count:-0}
+          perf_count=${perf_count:-0}
+          chore_count=${chore_count:-0}
+
+          {
+            echo "feat=$feat_count"
+            echo "fix=$fix_count"
+            echo "docs=$docs_count"
+            echo "test=$test_count"
+            echo "refactor=$refactor_count"
+            echo "style=$style_count"
+            echo "perf=$perf_count"
+            echo "chore=$chore_count"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Check for Zenoter-specific concerns
         id: checks
@@ -92,9 +115,11 @@ jobs:
           # Check if coverage report exists (rough indicator)
           coverage_note="Run tests to verify coverage ≥ 90%"
 
-          echo "csp_warning=$csp_warning" >> $GITHUB_OUTPUT
-          echo "tests_modified=$tests_modified" >> $GITHUB_OUTPUT
-          echo "coverage_note=$coverage_note" >> $GITHUB_OUTPUT
+          {
+            echo "csp_warning=$csp_warning"
+            echo "tests_modified=$tests_modified"
+            echo "coverage_note=$coverage_note"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update PR description
         uses: actions/github-script@v7
