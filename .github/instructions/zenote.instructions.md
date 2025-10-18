@@ -74,7 +74,7 @@ MARKDOWN_PREVIEW: true,
 DARK_MODE: true,
 AUTH_SYSTEM: true,          // Firebase Auth enabled
 CLOUD_SYNC: true,           // Firestore sync enabled
-ON_DEMAND_COMMITS: false,   // Premium: Manual commits (paywall)
+// NOTE: ON_DEMAND_COMMITS is documentation-only for Phase 4 implementation. Not yet present in src/config/featureFlags.ts.
 
   // Phase 2 - Advanced features (Disabled)
   REAL_TIME_SYNC: false,      // WebSocket sync (premium)

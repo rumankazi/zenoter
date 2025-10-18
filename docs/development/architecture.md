@@ -129,6 +129,15 @@ graph LR
 - **Phase 1-2**: Vite (web + PWA) - Lightning-fast HMR, optimized builds
 - **Phase 3+**: Electron (desktop) - Mature ecosystem, when users request
 
+**Premium User Stack:**
+
+- **Subscription Management**: Firestore collections (users, subscriptions, usage)
+- **Payment Processing**: Stripe Checkout + Billing Portal
+- **Entitlement Verification**: Cloud Functions (server-side) + useEntitlement hook (client)
+- **Feature Gating**: Firebase custom claims + Firestore security rules
+- **Usage Tracking**: Firestore counters with monthly resets
+- **See**: [Premium User Infrastructure](./premium-user-infrastructure.md) for complete architecture
+
 **Alternatives considered:**
 
 - Tauri: Lighter but less mature animation ecosystem

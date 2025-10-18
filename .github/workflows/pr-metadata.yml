@@ -2,13 +2,46 @@ name: Update PR Metadata
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, edited]
 
 permissions:
   pull-requests: write
   contents: read
+  issues: write
 
 jobs:
+  validate-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            chore
+            ci
+            build
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            Subject must start with a lowercase letter.
+
+            Examples:
+            ✅ feat: add new feature
+            ✅ fix(editor): resolve crash on startup
+            ❌ feat: Add new feature (uppercase A)
+
+            See https://www.conventionalcommits.org/ for more info.
+
   update-pr:
     runs-on: ubuntu-latest
     steps:

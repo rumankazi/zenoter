@@ -203,8 +203,8 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
 - Average note size: 5 KB (plain text)
 - Gzip compression: 70% reduction → 1.5 KB per commit
-- Free users: 1 auto-daily commit × 30 days = 45 KB/user
-- Premium users (10% adoption): 10 on-demand/month = 15 KB/user
+- Free users: 1 auto-daily commit × 30 days × 1.5 KB = 45 KB/user
+- Premium users (10% adoption): 10 on-demand/month × 1.5 KB = 15 KB/user
 
 **Monthly costs**:
 
@@ -249,10 +249,10 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 - Bandwidth: $0.0005
 - Firestore reads: $0.10
 - Firestore writes: $0.06
-- **Total: ~$0.16/month** or **$0.00016 per user**
+- **Total: ~$0.16/month** or **$0.00015 per user** (1,100 users total)
 
-**Revenue** (10% premium at $5/month): $500/month  
-**Profit margin**: 99.97% (infrastructure costs negligible)
+**Revenue** (10% premium at $10/month): $1,000/month  
+**Profit margin**: 99.98% (infrastructure costs negligible)
 
 ## User Experience
 

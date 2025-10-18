@@ -200,11 +200,16 @@ export const FEATURE_FLAGS = {
 
 #### Week 2: Firebase Auth + Backend (Oct 25-31)
 
-- [ ] Set up Firebase project
+- [ ] Set up Firebase project (dev + prod environments)
 - [ ] Implement auth UI (login/signup/reset)
 - [ ] Google OAuth integration
 - [ ] GitHub OAuth integration
-- [ ] Session management
+- [ ] Session management with custom claims
+- [ ] **Premium user infrastructure setup**
+  - [ ] Firestore collections (users, subscriptions, usage)
+  - [ ] Security rules for user data
+  - [ ] useEntitlement hook for client-side gating
+  - [ ] Entitlement service (Cloud Function)
 - [ ] Auth tests (30+ new tests)
 
 #### Week 3: IndexedDB + Sync Engine (Nov 1-7)
@@ -214,12 +219,19 @@ export const FEATURE_FLAGS = {
 - [ ] Conflict resolution (last-write-wins)
 - [ ] Offline queue with retry
 - [ ] Sync UI indicators
-- [ ] **Git-like commit system (auto-daily saves)**
-  - [ ] Commit metadata schema (Firestore)
-  - [ ] Storage abstraction (Cloud Storage for blobs)
-  - [ ] Auto-commit service (daily at midnight)
-  - [ ] Commit history UI (timeline view)
-  - [ ] Restore from commit functionality
+- [ ] Sync tests (40+ new tests)
+
+**Git-like Commit System (Auto-Commits)**:
+
+- [ ] Commit metadata schema (Firestore)
+- [ ] Storage abstraction (Cloud Storage for blobs)
+- [ ] Auto-commit service (daily at midnight)
+- [ ] Commit history UI (timeline view)
+- [ ] Restore from commit functionality
+- [ ] Set up Stripe account (test mode)
+- [ ] Create products & prices (Pro, Team, Enterprise)
+- [ ] Webhook handler (Cloud Function)
+- [ ] Test checkout flow in staging
 - [ ] Sync tests (40+ new tests)
 
 #### Week 4: Polish + Deploy (Nov 8-14)
