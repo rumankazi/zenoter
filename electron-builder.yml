@@ -7,18 +7,34 @@ files:
   - dist/**/*
   - dist-electron/**/*
   - package.json
-  - '!node_modules'
+  - node_modules/**/*
+  - '!node_modules/.cache'
+  - '!node_modules/.bin'
 extraResources: []
 asar: true
 asarUnpack:
+  - '**/*.node'
   - node_modules/better-sqlite3/**/*
 nodeGypRebuild: false
-npmRebuild: false
+npmRebuild: true
 buildDependenciesFromSource: false
+electronDist: node_modules/electron/dist
 win:
   target:
+    - target: nsis
+      arch:
+        - x64
     - target: zip
       arch:
         - x64
   artifactName: '${productName}-Setup-${version}.${ext}'
   signAndEditExecutable: false
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Zenoter
+  perMachine: false
+  deleteAppDataOnUninstall: false
