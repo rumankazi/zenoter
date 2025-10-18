@@ -75,7 +75,8 @@
     "concurrently": "^9.2.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "electron": "^38.3.0",
-    "electron-builder": "^26.0.0",
+    "electron-builder": "^26.1.0",
+    "electron-builder-squirrel-windows": "26.1.0",
     "eslint": "^9.37.0",
     "eslint-plugin-react-hooks": "^7.0.0",
     "husky": "^9.1.7",
@@ -100,11 +101,7 @@
       "dist/**/*",
       "dist-electron/**/*"
     ],
-    "publish": {
-      "provider": "github",
-      "owner": "rumankazi",
-      "repo": "zenoter"
-    },
+    "publish": "never",
     "win": {
       "target": [
         {
