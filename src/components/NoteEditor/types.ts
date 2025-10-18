@@ -3,17 +3,19 @@
  */
 
 export interface NoteEditorProps {
-  /** The content to display in the editor */
+  /** Current note content */
   value: string;
   /** Callback when content changes */
   onChange: (value: string) => void;
-  /** Optional language mode (default: markdown) */
+  /** Callback when editor scrolls or cursor moves */
+  onScroll?: (scrollPercentage: number) => void;
+  /** Editor language (default: 'markdown') */
   language?: string;
-  /** Optional height (default: 100%) */
+  /** Editor height (default: '100%') */
   height?: string;
-  /** Optional class name for custom styling */
+  /** Optional CSS class */
   className?: string;
-  /** Optional loading text */
+  /** Loading text */
   loading?: string;
 }
 

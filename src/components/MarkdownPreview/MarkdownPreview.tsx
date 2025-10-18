@@ -1,0 +1,112 @@
+/**
+ * MarkdownPreview Component
+ * Renders markdown content with GitHub-style formatting
+ */
+
+import { FC, useEffect, useRef } from 'react';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
+import styles from './MarkdownPreview.module.css';
+
+interface MarkdownPreviewProps {
+  /** Markdown content to render */
+  content: string;
+  /** Scroll position as percentage (0-1) */
+  scrollPercentage?: number;
+  /** Optional class name */
+  className?: string;
+}
+
+/**
+ * Simple markdown renderer (will be enhanced with a proper library later)
+ * For MVP, we'll use basic HTML rendering with sanitization
+ */
+export const MarkdownPreview: FC<MarkdownPreviewProps> = ({
+  content,
+  scrollPercentage,
+  className,
+}) => {
+  const previewRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync scroll position when scrollPercentage changes
+  useEffect(() => {
+    if (scrollPercentage !== undefined && containerRef.current) {
+      const container = containerRef.current;
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      const targetScroll = maxScroll * scrollPercentage;
+
+      // Instant scroll for immediate response (no delay)
+      requestAnimationFrame(() => {
+        container.scrollTop = targetScroll;
+      });
+    }
+  }, [scrollPercentage]);
+
+  useEffect(() => {
+    if (previewRef.current) {
+      // Basic markdown-to-HTML conversion (simplified for MVP)
+      // TODO: Replace with marked.js or similar library in next sprint
+
+      // Step 1: Protect code blocks from other replacements
+      const codeBlocks: string[] = [];
+      let html = content.replace(/```(\w+)?\n([\s\S]*?)```/gim, (_match, lang, code) => {
+        const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+        codeBlocks.push(
+          `<pre><code class="language-${lang || 'plaintext'}">${code.trim()}</code></pre>`
+        );
+        return placeholder;
+      });
+
+      // Step 2: Process inline elements
+      html = html
+        // Headers (must be at start of line)
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        // Italic (must come after bold)
+        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+        // Inline code (after code blocks are protected)
+        .replace(/`(.*?)`/gim, '<code>$1</code>')
+        // Lists
+        .replace(/^- (.*$)/gim, '<li>$1</li>')
+        // Horizontal rule
+        .replace(/^---$/gim, '<hr>')
+        // Paragraphs (double line breaks)
+        .replace(/\n\n/g, '</p><p>')
+        // Single line breaks
+        .replace(/\n/g, '<br>');
+
+      // Step 3: Restore code blocks
+      codeBlocks.forEach((block, index) => {
+        html = html.replace(`__CODE_BLOCK_${index}__`, block);
+      });
+
+      // Step 4: Wrap in paragraphs
+      html = '<p>' + html + '</p>';
+
+      // Step 5: Clean up
+      html = html
+        .replace(/<p><\/p>/g, '')
+        .replace(/<p>(<pre>)/g, '$1') // Don't wrap pre in p
+        .replace(/(<\/pre>)<\/p>/g, '$1'); // Don't wrap pre in p
+
+      previewRef.current.innerHTML = html;
+
+      // Step 6: Apply syntax highlighting to code blocks
+      previewRef.current.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block as HTMLElement);
+      });
+    }
+  }, [content]);
+
+  return (
+    <div ref={containerRef} className={`${styles.previewContainer} ${className || ''}`}>
+      <div ref={previewRef} className={styles.previewContent} aria-label="Markdown preview" />
+    </div>
+  );
+};
+
+export default MarkdownPreview;

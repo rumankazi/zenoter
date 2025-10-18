@@ -1,0 +1,96 @@
+/**
+ * ResizablePane Styles
+ * VS Code-like resizable split view
+ */
+
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.horizontal {
+  flex-direction: row;
+}
+
+.vertical {
+  flex-direction: column;
+}
+
+.leftPane,
+.rightPane {
+  overflow: hidden;
+  position: relative;
+}
+
+.leftPane {
+  flex-shrink: 0;
+}
+
+.rightPane {
+  flex-grow: 1;
+  flex-shrink: 0;
+}
+
+/* Divider */
+.divider {
+  position: relative;
+  background-color: var(--color-border);
+  transition: background-color 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider:hover,
+.divider:focus {
+  background-color: var(--color-primary);
+  outline: none;
+}
+
+.dividerDragging {
+  background-color: var(--color-primary);
+}
+
+.dividerHorizontal {
+  width: 4px;
+  cursor: col-resize;
+  flex-shrink: 0;
+}
+
+.dividerVertical {
+  height: 4px;
+  cursor: row-resize;
+  flex-shrink: 0;
+}
+
+.dividerHandle {
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.dividerHorizontal .dividerHandle {
+  width: 2px;
+  height: 40px;
+  border-radius: 2px;
+}
+
+.dividerVertical .dividerHandle {
+  width: 40px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.divider:hover .dividerHandle,
+.divider:focus .dividerHandle,
+.dividerDragging .dividerHandle {
+  background-color: var(--color-primary-light, var(--color-primary));
+}
+
+/* Prevent text selection during drag */
+.container.dragging {
+  user-select: none;
+}

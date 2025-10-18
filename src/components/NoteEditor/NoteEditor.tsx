@@ -32,6 +32,7 @@ const DEFAULT_OPTIONS: EditorOptions = {
 export const NoteEditor: React.FC<NoteEditorProps> = ({
   value,
   onChange,
+  onScroll,
   language = 'markdown',
   height = '100%',
   className,
@@ -60,6 +61,36 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
     // Focus editor on mount for better UX
     editor.focus();
+
+    // Set up scroll synchronization
+    if (onScroll) {
+      // Track scroll position changes
+      editor.onDidScrollChange(() => {
+        const model = editor.getModel();
+        if (!model) return;
+
+        const visibleRanges = editor.getVisibleRanges();
+        if (visibleRanges.length === 0) return;
+
+        const firstVisibleLine = visibleRanges[0].startLineNumber;
+        const totalLines = model.getLineCount();
+        const scrollPercentage = (firstVisibleLine - 1) / Math.max(totalLines - 1, 1);
+
+        onScroll(scrollPercentage);
+      });
+
+      // Track cursor position changes (when user clicks or navigates)
+      editor.onDidChangeCursorPosition((e) => {
+        const model = editor.getModel();
+        if (!model) return;
+
+        const cursorLine = e.position.lineNumber;
+        const totalLines = model.getLineCount();
+        const scrollPercentage = (cursorLine - 1) / Math.max(totalLines - 1, 1);
+
+        onScroll(scrollPercentage);
+      });
+    }
   };
 
   /**
