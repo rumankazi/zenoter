@@ -36,37 +36,56 @@ jobs:
         id: filter
         with:
           filters: |
-            code:
-              - 'src/**/*.{ts,tsx}'
-              - 'electron/**/*.ts'
-              - '!src/test/**'
-              - '!**/*.test.{ts,tsx}'
-              - '!**/*.spec.{ts,tsx}'
-              - '!**/*.e2e.{ts,tsx}'
-            tests:
-              - 'src/test/**/*.{test,spec}.{ts,tsx}'
-              - 'src/test/setup.ts'
-            e2e:
-              - 'src/test/e2e/**/*.e2e.{ts,tsx}'
-              - 'playwright.config.ts'
-            docs:
-              - 'docs/**'
-              - '*.md'
-              - 'README.md'
-              - '.github/instructions/**'
-            config:
-              - '*.json'
-              - '*.config.{js,ts,cjs,mjs}'
-              - 'tsconfig*.json'
-              - '.nvmrc'
-              - '.prettierrc'
-              - '.eslintrc*'
-              - 'electron-builder.yml'
+            # Mutually exclusive filters - each file belongs to exactly one category
+
+            # 1. Workflows - GitHub Actions (highest priority)
             workflows:
               - '.github/workflows/**'
+
+            # 2. Dependencies - package management
             dependencies:
               - 'package.json'
               - 'pnpm-lock.yaml'
+
+            # 3. E2E tests - Playwright tests (before general tests)
+            e2e:
+              - 'src/test/e2e/**/*.e2e.{ts,tsx}'
+              - 'playwright.config.ts'
+
+            # 4. Unit/Integration tests - all test files
+            tests:
+              - 'src/test/**/*.test.{ts,tsx}'
+              - 'src/test/**/*.spec.{ts,tsx}'
+              - 'src/test/setup.ts'
+              - 'src/test/*/setup.ts'
+
+            # 5. Documentation - all docs and markdown
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - '.github/instructions/**'
+
+            # 6. Configuration - build/tooling config files
+            config:
+              - '*.config.{js,ts,cjs,mjs}'
+              - 'tsconfig*.json'
+              - '.nvmrc'
+              - '.prettierrc*'
+              - '.eslintrc*'
+              - 'commitlint.config.js'
+              - 'electron-builder.yml'
+              - 'renovate.json'
+              - '.editorconfig'
+              - '.gitignore'
+              - '.gitattributes'
+
+            # 7. Production code - app source (excluding tests, docs, config)
+            code:
+              - 'src/**/*.{ts,tsx}'
+              - 'src/**/*.{css,module.css}'
+              - 'electron/**/*.ts'
+              - 'index.html'
+              - 'main.css'
 
   # Job 1: Code Quality Checks
   code-quality:

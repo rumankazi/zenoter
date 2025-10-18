@@ -1,93 +1,128 @@
 # Roadmap
 
-## Current Status: Phase 1 - MVP Development
-
-**Target Release**: November 2025
+**Last Updated**: October 18, 2025  
+**Strategy**: Web-First → Mobile PWA → Desktop Apps (when requested)
 
 ---
 
-## 🚧 Phase 1: MVP (Current)
+## 🚧 Phase 1: Web MVP with Auth + Sync (Current)
 
-**Timeline**: 6 weeks
+**Timeline**: 4 weeks (Oct 18 - Nov 15, 2025)  
+**Target Release**: November 15, 2025
 
 ### Core Features
 
 - ✅ Monaco Editor integration
-- ✅ File tree management
-- ✅ Markdown preview
-- ✅ Dark/Light themes
-- ✅ Auto-save
-- ⏳ Windows installer
-- ⏳ Documentation site
+- ✅ Markdown preview with syntax highlighting
+- ✅ Dark/Light/Auto themes
+- ✅ Auto-save (500ms debounce)
+- ✅ Keyboard shortcuts
+- ⏳ Firebase Authentication (Google, GitHub, Email)
+- ⏳ Cloud sync with Firestore
+- ⏳ Offline-first (IndexedDB)
+- ⏳ Conflict resolution UI
+- ⏳ Deploy to Vercel
 
-### What You Can Do Now
+### What You Can Do
 
-- Create and organize notes locally
-- Full markdown support with live preview
-- Drag-and-drop file organization
-- Keyboard shortcuts for efficiency
-
----
-
-## 📋 Phase 2: Cloud Foundation
-
-**Timeline**: Q1 2026
-
-### Planned Features
-
-- ☁️ Cloud synchronization
-- 🔐 User authentication (Google, GitHub, Microsoft)
-- 📜 Version history
-- 🌐 Web app (PWA)
-- 🔄 Manual and automatic sync options
+- Create and edit notes with VS Code-like editor
+- Sync notes across all devices
+- Work offline, sync when online
+- Sign in with Google/GitHub
+- Beautiful animations throughout
 
 ### Infrastructure
 
-- Firebase integration (free tier)
-- End-to-end encryption
-- Cross-device sync
+- **Hosting**: Vercel (free tier)
+- **Auth**: Firebase Auth (free tier: 50k users)
+- **Database**: Firestore + IndexedDB (free tier: 50k reads/day)
+- **Cost**: $0/month ✅
 
 ---
 
-## 🚀 Phase 3: Scale & Premium
+## 📱 Phase 2: Mobile PWA
 
-**Timeline**: Q2 2026
+**Timeline**: 1 week (Nov 15-22, 2025)  
+**Target Release**: November 22, 2025
 
-### Premium Features
+### Planned Features
 
-- ⚡ Real-time sync
-- 🎨 Custom themes marketplace
-- 🔍 Advanced search with AI
-- 📊 Analytics dashboard
+- 📲 Installable PWA on iOS/Android
+- 🔄 Service worker for offline mode
+- 📬 Push notifications (optional)
+- 👆 Touch gesture optimizations
+- 🎨 Mobile-specific UI adjustments
+- **✏️ CodeMirror 6 Editor** (500KB, touch-optimized)
+  - Syntax highlighting for 50+ languages
+  - Native mobile selection
+  - Auto-indentation and bracket matching
+  - Code folding and search/replace
+  - Battery-efficient
+
+### What You'll Get
+
+- Install app on phone like a native app
+- Works offline with background sync
+- Fast load times (cached assets)
+- Native-like experience
+- Touch-optimized editor (85% smaller than Monaco)
+
+### Infrastructure
+
+- Same as Phase 1 (still $0/month)
+
+---
+
+## �️ Phase 3: Desktop Apps (When Users Request)
+
+**Timeline**: Q1 2026 (or when 100+ user requests)  
+**Condition**: 100+ desktop requests OR $500+ MRR
+
+### Platform Support
+
+- 🪟 Windows (.exe)
+- 🍎 macOS (.dmg)
+- 🐧 Linux (.AppImage, Snap)
+
+### Features
+
+- Same features as web (shared codebase)
+- SQLite for desktop storage
+- Native menus and system tray
+- Auto-update system
+- Code signing (when revenue allows)
+
+### Why Later?
+
+- Code signing costs $200-400/year
+- Web + PWA covers 95% of use cases
+- Desktop when users specifically request it
+
+---
+
+## 🚀 Phase 4: Premium Features
+
+**Timeline**: Q2 2026  
+**Goal**: Revenue generation + advanced features
+
+### Premium Tier ($5-10/month)
+
+- ⚡ Real-time collaboration
+- � Version history (Git-like)
+- 🎨 Custom themes
+- 🔍 Advanced search (regex, filters)
+- � Unlimited storage
 - 🏢 Workspace management
 - 💼 Priority support
 
-### Platform Expansion
-
-- 🍎 macOS application
-- 🐧 Linux support (AppImage, Snap)
-- 🌍 Internationalization (i18n)
-
----
-
-## 🌟 Phase 4: Mobile & Beyond
-
-**Timeline**: Q3 2026
-
-### Mobile Applications
-
-- 📱 iOS app
-- 🤖 Android app
-- ⌚ Apple Watch companion
-- 📲 Tablet optimizations
-
 ### Advanced Features
 
-- 🤝 Real-time collaboration
+- 🤝 Real-time collaborative editing
 - 🔌 Plugin ecosystem
-- 🤖 AI-powered features
-- 🎯 Enterprise features
-- 📡 API for integrations
+- 🤖 AI-powered suggestions
+- 📊 Analytics dashboard
+- � Internationalization (i18n)
+- 📡 Public API for integrations
 
 ---
 
