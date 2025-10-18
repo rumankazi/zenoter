@@ -76,14 +76,34 @@ AUTH_SYSTEM: true,          // Firebase Auth enabled
 CLOUD_SYNC: true,           // Firestore sync enabled
 ON_DEMAND_COMMITS: false,   // Premium: Manual commits (paywall)
 
-// Phase 2+ - Advanced features
-REAL_TIME_SYNC: false,      // WebSocket sync (premium)
-VERSION_CONTROL: false,     // Git-like versioning
-COLLABORATION: false,       // Real-time collaborative editing
+  // Phase 2 - Advanced features (Disabled)
+  REAL_TIME_SYNC: false,      // WebSocket sync (premium)
+  VERSION_CONTROL: false,     // Git-like versioning
+  COLLABORATION: false,       // Real-time collaborative editing
+  ADVANCED_SEARCH: false,     // Regex + AST-based search (Pro)
 
-// Phase 3+ - Desktop specific
-DESKTOP_APP: false,         // Electron desktop app
-OFFLINE_SQLITE: false,      // Desktop SQLite storage
+  // Phase 3+ - Pro Features (Disabled)
+  CODE_EXECUTION: false,      // Run JS/Python/TS snippets (Pro)
+  SNIPPET_LIBRARY: false,     // Unlimited snippets with tab-triggers (Pro)
+  DIAGRAM_ADVANCED: false,    // PlantUML, D2, GraphViz (Pro)
+  BROWSER_EXTENSION: false,   // Web clipper (Pro)
+  LIVE_TEMPLATES: false,      // Dynamic templates with variables (Pro)
+
+  // Phase 4+ - Team Features (Disabled)
+  TEAM_WORKSPACES: false,     // Multi-user workspaces with RBAC (Team)
+  DATABASE_RUNNER: false,     // Query PostgreSQL/MySQL/MongoDB (Team)
+  GIT_INTEGRATION: false,     // GitHub/GitLab sync (Team)
+  AUDIT_LOGS: false,          // Activity tracking (Team)
+
+  // Phase 5+ - Enterprise Features (Disabled)
+  AI_ASSISTANT: false,        // Code generation with GPT-4/Claude (Enterprise)
+  TERMINAL_INTEGRATION: false, // Cloud-based terminal execution (Enterprise)
+  SSO_SAML: false,            // Enterprise authentication (Enterprise)
+  ON_PREMISE: false,          // Self-hosted deployment (Enterprise)
+
+  // Phase 3+ - Desktop specific
+  DESKTOP_APP: false,         // Electron desktop app
+  OFFLINE_SQLITE: false,      // Desktop SQLite storage
 ```
 
 ## Development Principles

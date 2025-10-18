@@ -115,11 +115,26 @@ export const FEATURE_FLAGS = {
   REAL_TIME_SYNC: false, // WebSocket sync (premium)
   VERSION_CONTROL: false, // Git-like versioning
   COLLABORATION: false, // Real-time collaborative editing
-  ADVANCED_SEARCH: false,
+  ADVANCED_SEARCH: false, // Regex + AST search (Pro)
 
-  // Phase 3 - Premium features (Disabled)
-  CUSTOM_THEMES: false,
-  AI_SUGGESTIONS: false,
+  // Phase 3 - Pro Features (Disabled)
+  CODE_EXECUTION: false, // Run JS/Python/TS (Pro)
+  SNIPPET_LIBRARY: false, // Unlimited snippets (Pro)
+  DIAGRAM_ADVANCED: false, // PlantUML, D2 (Pro)
+  BROWSER_EXTENSION: false, // Web clipper (Pro)
+  LIVE_TEMPLATES: false, // Dynamic templates (Pro)
+
+  // Phase 4 - Team Features (Disabled)
+  TEAM_WORKSPACES: false, // Multi-user RBAC (Team)
+  DATABASE_RUNNER: false, // Query databases (Team)
+  GIT_INTEGRATION: false, // GitHub/GitLab (Team)
+  AUDIT_LOGS: false, // Activity tracking (Team)
+
+  // Phase 5 - Enterprise Features (Disabled)
+  AI_ASSISTANT: false, // GPT-4/Claude (Enterprise)
+  TERMINAL_INTEGRATION: false, // Cloud terminals (Enterprise)
+  SSO_SAML: false, // Enterprise auth (Enterprise)
+  ON_PREMISE: false, // Self-hosted (Enterprise)
 
   // Phase 4 - Desktop/Mobile (Disabled)
   DESKTOP_APP: false, // Electron app
@@ -273,15 +288,16 @@ export const FEATURE_FLAGS = {
 
 ---
 
-### 🚀 Phase 4: Premium Features
+### 🚀 Phase 4: Pro Features (Q2 2026)
 
-**Target Date**: Q2 2026  
+**Target Date**: Q2 2026 (10 weeks)  
 **Status**: Future  
-**Infrastructure**: PostgreSQL + Cloud Run ($85-105/month)
+**Infrastructure**: PostgreSQL + Cloud Run ($85-105/month)  
+**Pricing**: $9/month or $90/year
 
-#### Premium Features:
+#### Pro Features (Individual developers):
 
-- [ ] **On-Demand Commits** (Premium gated)
+- [ ] **On-Demand Commits** (Week 1-2)
   - [ ] "Commit now" button in editor toolbar
   - [ ] Server-side entitlement check (Cloud Function)
   - [ ] Unlimited manual commits for premium users
@@ -289,17 +305,161 @@ export const FEATURE_FLAGS = {
   - [ ] Pre-commit diff preview
   - [ ] Merge/replace restore options
   - [ ] Billing integration (Stripe webhook)
-- [ ] Real-time collaboration
-- [ ] Advanced search
-- [ ] Custom themes
-- [ ] Premium tier ($5-10/month)
+  - [ ] **Retention**: Free (30 days, 1 on-demand/month) vs Pro (1 year, unlimited)
 
-**Retention Policies**:
+- [ ] **Advanced Search** (Week 3-4)
+  - [ ] Regex search across all notes
+  - [ ] AST-based code structure search (find functions, classes)
+  - [ ] Search within commit history
+  - [ ] Search filters (language, date, tags)
+  - [ ] Performance: Web Worker for parsing (non-blocking)
 
-- **Free users**: 1 auto-daily commit/day, 30-day retention, 1 on-demand/month
-- **Premium users**: Unlimited on-demand commits, 1-year retention
+- [ ] **Snippet Library** (Week 5-6)
+  - [ ] Unlimited snippets (free: 10 max)
+  - [ ] Tab-triggers (e.g., 'rfc' → React component)
+  - [ ] Variable support (${1:name}, $CURRENT_DATE)
+  - [ ] Monaco CompletionItemProvider integration
+  - [ ] Sync across devices (Firestore)
 
-**Goal**: $500+ MRR (50+ premium users)
+- [ ] **Browser Extension** (Week 7-8)
+  - [ ] Chrome/Firefox/Edge support
+  - [ ] One-click save from web pages
+  - [ ] Screenshot with annotations
+  - [ ] Auto-tag by domain
+  - [ ] Readability.js for clean Markdown conversion
+
+- [ ] **Diagram-as-Code** (Week 9-10)
+  - [ ] PlantUML server-side rendering
+  - [ ] D2 diagram support
+  - [ ] GraphViz integration
+  - [ ] Export to PNG/SVG/PDF
+  - [ ] Caching for performance
+
+**Goal**: 5% free → Pro conversion (500 Pro users @ $9 = $4,500 MRR)
+
+---
+
+### 👥 Phase 5: Team Features (Q3 2026)
+
+**Target Date**: Q3 2026 (12 weeks)  
+**Status**: Future  
+**Infrastructure**: Multi-tenant Firestore + Cloud Run  
+**Pricing**: $15/user/month (min 5 seats)
+
+#### Team Features (5-50 users):
+
+- [ ] **Team Workspaces** (Week 1-3)
+  - [ ] Multi-tenant workspace architecture
+  - [ ] Role-based access control (Owner, Admin, Editor, Viewer)
+  - [ ] Invitation system (email + magic links)
+  - [ ] Real-time collaboration (Firestore listeners)
+  - [ ] Workspace settings (name, avatar, billing)
+
+- [ ] **Shared Snippets & Templates** (Week 4-5)
+  - [ ] Team snippet libraries
+  - [ ] Live templates with variables (Handlebars.js)
+  - [ ] Template picker in "New Note" dropdown
+  - [ ] Conditional sections in templates
+
+- [ ] **Audit Logs** (Week 6-7)
+  - [ ] Track all note access, edits, deletions
+  - [ ] 90-day retention (free: none)
+  - [ ] Export to CSV for compliance
+  - [ ] Filter by user, action, date
+
+- [ ] **Database Query Runner** (Week 8-9)
+  - [ ] Connect to PostgreSQL, MySQL, MongoDB
+  - [ ] Run queries inline, see results
+  - [ ] Secure proxy connections
+  - [ ] Query history and favorites
+
+- [ ] **Git Integration** (Week 10-11)
+  - [ ] GitHub/GitLab OAuth
+  - [ ] Auto-link commits to notes
+  - [ ] PR status in notes
+  - [ ] Branch-specific notes
+  - [ ] Webhooks for sync
+
+- [ ] **Priority Support** (Week 12)
+  - [ ] 24-hour response time
+  - [ ] Dedicated Slack channel (Enterprise)
+  - [ ] Video onboarding (5+ teams)
+
+**Goal**: 20% Pro → Team conversion (100 Team users = 20 teams × 5 users @ $15 = $1,500 MRR)
+
+---
+
+### 🏢 Phase 6: Enterprise Features (Q4 2026)
+
+**Target Date**: Q4 2026 (12 weeks)  
+**Status**: Future  
+**Infrastructure**: Dedicated Cloud Run instances + Cloud SQL  
+**Pricing**: Custom ($500+/month, starting $10,000/year)
+
+#### Enterprise Features (50+ users, compliance needs):
+
+- [ ] **AI Code Assistant** (Week 1-4)
+  - [ ] OpenAI GPT-4 or Anthropic Claude integration
+  - [ ] Generate code from descriptions
+  - [ ] Explain complex snippets
+  - [ ] Refactor suggestions
+  - [ ] Unlimited usage (Pro: 100 requests/day)
+  - [ ] Privacy: transient processing, no storage
+  - [ ] Cost: ~$750/month for 1,000 Pro users
+
+- [ ] **Terminal Integration** (Week 5-8)
+  - [ ] Cloud-based Docker containers
+  - [ ] xterm.js + WebSocket frontend
+  - [ ] Sandboxed execution (no network, 5-min timeout)
+  - [ ] Command allowlist (security)
+  - [ ] Output capture in notes
+
+- [ ] **SSO/SAML** (Week 9-10)
+  - [ ] Okta, Azure AD, Google Workspace
+  - [ ] SCIM provisioning (auto-add/remove users)
+  - [ ] Group-based permissions
+
+- [ ] **On-Premise Deployment** (Week 11-12)
+  - [ ] Docker Compose setup
+  - [ ] Kubernetes Helm charts
+  - [ ] Air-gapped installation docs
+  - [ ] Self-hosted update mechanism
+
+- [ ] **SOC 2 Compliance**
+  - [ ] Annual audit
+  - [ ] Security questionnaire support
+  - [ ] Penetration testing reports
+
+**Goal**: Close 5 enterprise deals (50 users @ $50/user = $2,500 MRR)
+
+---
+
+### 💰 Revenue Projections (10,000 Users)
+
+**Phase 4 Complete** (Q2 2026):
+
+- 500 Pro users × $9 = $4,500 MRR
+- **Total**: $4,500 MRR ($54,000 ARR)
+
+**Phase 5 Complete** (Q3 2026):
+
+- 500 Pro users × $9 = $4,500 MRR
+- 100 Team users × $15 = $1,500 MRR
+- **Total**: $6,000 MRR ($72,000 ARR)
+
+**Phase 6 Complete** (Q4 2026):
+
+- 500 Pro users × $9 = $4,500 MRR
+- 100 Team users × $15 = $1,500 MRR
+- 50 Enterprise users × $50 = $2,500 MRR
+- **Total**: $8,500 MRR ($102,000 ARR)
+
+**At 100,000 users** (2027+):
+
+- 5,000 Pro × $9 = $45,000 MRR
+- 1,000 Team × $15 = $15,000 MRR
+- 500 Enterprise × $50 = $25,000 MRR
+- **Total**: $85,000 MRR ($1,020,000 ARR) 🎉
 
 ---
 

@@ -16,12 +16,20 @@
 - 📡 **Offline-First** - Works without internet, syncs when online
 - 🎨 **Beautiful Animations** - Smooth, modern animations throughout
 - 🌙 **Dark/Light Themes** - Easy on the eyes for long coding sessions
-- 🔍 **Advanced Search** - Full-text search with regex support
+- 🔍 **Advanced Search** - Full-text search (Pro: regex + AST)
 - ⚡ **Lightning Fast** - Instant startup and 60fps animations
 - 💾 **Auto-Save** - Never lose your work
 - 🕰️ **Time Travel** - Daily auto-commits, restore any previous version
-- ⚡ **On-Demand Commits** (Premium) - Save snapshots anytime with custom messages
+- ⚡ **On-Demand Commits** (Pro) - Save snapshots anytime with custom messages
 - 📱 **Progressive Web App** - Install on mobile like a native app
+- 📝 **Snippet Library** - Reusable code templates (Pro: unlimited)
+- 🌐 **Browser Extension** (Pro) - Save web content instantly
+- 📊 **Advanced Diagrams** (Pro) - PlantUML, D2, GraphViz
+- 👥 **Team Workspaces** (Team) - Collaborate with RBAC
+- 🗄️ **Database Runner** (Team) - Query PostgreSQL/MySQL inline
+- 🔗 **Git Integration** (Team) - Sync with GitHub/GitLab
+- 🤖 **AI Code Assistant** (Enterprise) - Generate & refactor code
+- 🖥️ **Terminal Integration** (Enterprise) - Run commands in cloud
 
 ## 🚀 Quick Start
 
@@ -112,13 +120,28 @@ Visit our [documentation site](https://rumankazi.github.io/zenoter/) for detaile
 - 🔜 Windows → macOS → Linux
 - 🔜 Same auth/sync as web
 
-### Phase 4: Advanced Features 🚀
+### Phase 4: Pro Features (Q2 2026) 🚀
 
-- 🔜 On-demand commits (Premium: $5-10/month)
-- 🔜 Real-time collaboration
-- 🔜 Extended version history (1 year)
-- 🔜 Custom themes
-- 🔜 React Native mobile apps (if needed)
+- 🔜 On-demand commits (Premium: $9/month)
+- 🔜 Advanced search (regex + AST)
+- 🔜 Unlimited snippet library
+- 🔜 Browser extension (web clipper)
+- 🔜 Advanced diagrams (PlantUML, D2)
+
+### Phase 5: Team Features (Q3 2026) 👥
+
+- 🔜 Team workspaces with RBAC ($15/user/month)
+- 🔜 Shared snippets & templates
+- 🔜 Database query runner
+- 🔜 Git integration (GitHub/GitLab)
+- 🔜 Audit logs
+
+### Phase 6: Enterprise Features (Q4 2026) 🏢
+
+- 🔜 AI code assistant (Custom pricing)
+- 🔜 Terminal integration
+- 🔜 SSO/SAML authentication
+- 🔜 On-premise deployment
 
 ## 🤝 Contributing
 
