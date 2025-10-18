@@ -65,7 +65,9 @@ jobs:
 
       - name: Create preview config
         run: |
-          echo '{"branches":["main","temp-release-preview"],"plugins":["@semantic-release/commit-analyzer","@semantic-release/release-notes-generator",["@semantic-release/changelog",{"changelogFile":"CHANGELOG.md"}],["@semantic-release/npm",{"npmPublish":false}]]}' > .releaserc.preview.json
+          # Backup original config and replace with preview version
+          mv .releaserc.json .releaserc.json.backup
+          echo '{"branches":["main","temp-release-preview"],"plugins":["@semantic-release/commit-analyzer","@semantic-release/release-notes-generator",["@semantic-release/changelog",{"changelogFile":"CHANGELOG.md"}],["@semantic-release/npm",{"npmPublish":false}]]}' > .releaserc.json
 
       - name: Run semantic-release (dry-run)
         id: dry-run
@@ -91,11 +93,14 @@ jobs:
           unset GITHUB_BASE_REF
           unset CI
 
-          # Run dry-run and capture output (using preview config without GitHub plugin)
+          # Run dry-run and capture output (using replaced config without GitHub plugin)
           set +e
-          pnpm exec semantic-release --extends ./.releaserc.preview.json --dry-run --no-ci --debug 2>&1 | tee dry-run.log
+          pnpm exec semantic-release --dry-run --no-ci --debug 2>&1 | tee dry-run.log
           EXIT_CODE=${PIPESTATUS[0]}
           set -e
+
+          # Restore original config
+          mv .releaserc.json.backup .releaserc.json
 
           echo ""
           echo "📊 Exit code: $EXIT_CODE"
