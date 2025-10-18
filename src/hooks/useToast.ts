@@ -3,7 +3,7 @@
  * Manages toast notifications
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { ToastType } from '../components/Toast';
 
 interface ToastState {
@@ -14,10 +14,10 @@ interface ToastState {
 
 export const useToast = () => {
   const [toasts, setToasts] = useState<ToastState[]>([]);
-  let nextId = 0;
+  const nextIdRef = useRef(0);
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = nextId++;
+    const id = nextIdRef.current++;
     setToasts((prev) => [...prev, { id, message, type }]);
   }, []);
 

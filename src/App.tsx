@@ -20,7 +20,10 @@ import styles from './App.module.css';
  * VS Code-like interface with resizable sidebar and optional preview
  */
 export const App: FC = () => {
-  const [testMode, setTestMode] = useState<boolean>(false); // Set to true to use DatabaseTester
+  // Use environment variable to enable DatabaseTester in development
+  const [testMode, setTestMode] = useState<boolean>(
+    import.meta.env.DEV && import.meta.env.VITE_ENABLE_DB_TESTER === 'true'
+  );
 
   // Toast notifications
   const toast = useToast();

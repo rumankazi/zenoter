@@ -45,8 +45,8 @@ export const NotesList: FC<NotesListProps> = ({
   };
 
   const getPreview = (content: string): string => {
-    // Handle undefined or null content
-    if (!content || typeof content !== 'string') {
+    // Handle empty string content
+    if (!content) {
       return 'No content';
     }
 

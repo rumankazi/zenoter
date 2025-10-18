@@ -60,12 +60,12 @@ app.whenReady().then(async () => {
   dbService = DatabaseService.getInstance();
   await dbService.initialize();
 
-  // Configure Content Security Policy for both dev and production
+  // Configure Content Security Policy (CSP) for both dev and production
   // Following Electron Security Guide: https://electronjs.org/docs/tutorial/security
   // Reference: VS Code implementation in src/vs/code/electron-main/app.ts
   //
-  // IMPORTANT: In development, we allow Vite dev server with HMR.
-  // In production, we enforce strict CSP with NO unsafe-inline/unsafe-eval.
+  // Development: Allow Vite dev server with unsafe-inline/unsafe-eval for HMR
+  // Production: Strict CSP with NO unsafe-inline/unsafe-eval (all styles in CSS Modules)
 
   session.defaultSession.webRequest.onHeadersReceived(
     (
@@ -77,7 +77,7 @@ app.whenReady().then(async () => {
           ...details.responseHeaders,
           'Content-Security-Policy': [
             isDev
-              ? // Development: Allow Vite dev server and unsafe-inline/eval for HMR
+              ? // Development mode
                 "default-src 'self'; " +
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173; " +
                 "style-src 'self' 'unsafe-inline' http://localhost:5173; " +

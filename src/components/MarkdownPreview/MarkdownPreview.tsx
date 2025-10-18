@@ -86,7 +86,7 @@ export const MarkdownPreview: FC<MarkdownPreviewProps> = ({
   useEffect(() => {
     if (previewRef.current) {
       // Basic markdown-to-HTML conversion (simplified for MVP)
-      // TODO: Replace with marked.js or similar library in next sprint
+      // Note: Will be replaced with marked.js in future sprint (tracked in GitHub issues)
 
       // Step 1: Protect code blocks from other replacements
       const codeBlocks: string[] = [];

@@ -221,18 +221,23 @@ export class DatabaseService {
       throw new Error('Database not initialized');
     }
 
+    // Whitelist of allowed field names to prevent SQL injection
+    const allowedFields = ['title', 'content'] as const;
+    type AllowedField = (typeof allowedFields)[number];
+
     const updates: string[] = [];
     const params: (string | number)[] = [];
 
-    if (input.title !== undefined) {
-      updates.push('title = ?');
-      params.push(input.title);
-    }
-
-    if (input.content !== undefined) {
-      updates.push('content = ?');
-      params.push(input.content);
-    }
+    // Validate and build SET clause with whitelisted fields
+    Object.keys(input).forEach((key) => {
+      if (allowedFields.includes(key as AllowedField)) {
+        const value = input[key as keyof UpdateNoteInput];
+        if (value !== undefined) {
+          updates.push(`${key} = ?`);
+          params.push(value);
+        }
+      }
+    });
 
     if (updates.length === 0) {
       return this.getNoteById(id);

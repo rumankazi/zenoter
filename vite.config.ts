@@ -22,7 +22,7 @@ export default defineConfig({
         ],
       },
     }),
-    // @ts-ignore - vite-plugin-monaco-editor type issue
+    // @ts-expect-error - vite-plugin-monaco-editor type issue
     monacoEditorPlugin.default({}),
   ],
   resolve: {
