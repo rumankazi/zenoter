@@ -47,22 +47,59 @@ jobs:
           GIT_COMMITTER_NAME: rumankazi
           GIT_COMMITTER_EMAIL: kaziruman@gmail.com
         run: |
-          # Run semantic-release and capture output
-          OUTPUT=$(pnpm exec semantic-release 2>&1)
-          echo "$OUTPUT"
+          echo "🚀 Starting semantic-release..."
+          echo "📋 Repository: ${{ github.repository }}"
+          echo "📋 Branch: ${{ github.ref_name }}"
+          echo "📋 Commit: ${{ github.sha }}"
+          echo ""
 
-          # Parse output for release information
-          if echo "$OUTPUT" | grep -q "Published release"; then
-            VERSION=$(echo "$OUTPUT" | grep -oP "Published release \K[0-9]+\.[0-9]+\.[0-9]+")
-            echo "new-release-published=true" >> $GITHUB_OUTPUT
-            echo "new-release-version=$VERSION" >> $GITHUB_OUTPUT
-            echo "✅ New release published: v$VERSION"
+          # Run semantic-release with verbose output
+          set +e  # Don't exit on error
+          pnpm exec semantic-release --debug 2>&1 | tee semantic-release.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+
+          echo ""
+          echo "📊 Exit code: $EXIT_CODE"
+
+          # Check if release was published
+          if [ $EXIT_CODE -eq 0 ]; then
+            if grep -q "Published release" semantic-release.log; then
+              VERSION=$(grep -oP "Published release \K[0-9]+\.[0-9]+\.[0-9]+" semantic-release.log || echo "unknown")
+              echo "new-release-published=true" >> $GITHUB_OUTPUT
+              echo "new-release-version=$VERSION" >> $GITHUB_OUTPUT
+              echo "✅ New release published: v$VERSION"
+            else
+              echo "new-release-published=false" >> $GITHUB_OUTPUT
+              echo "ℹ️  No new release (no relevant commits or already released)"
+            fi
           else
-            echo "new-release-published=false" >> $GITHUB_OUTPUT
-            echo "ℹ️  No release published"
+            echo "❌ semantic-release failed with exit code $EXIT_CODE"
+            echo "📋 Check logs above for details"
+            exit $EXIT_CODE
           fi
 
       - name: Output release info
         if: steps.semantic.outputs.new-release-published == 'true'
         run: |
           echo "🎉 New release published: v${{ steps.semantic.outputs.new-release-version }}"
+
+      - name: Upload semantic-release logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-release-logs
+          path: semantic-release.log
+          retention-days: 1
+
+      - name: Show failure summary
+        if: failure()
+        run: |
+          echo "## ❌ Release Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Error Details" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          tail -50 semantic-release.log >> $GITHUB_STEP_SUMMARY || echo "Log file not found" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 Full logs available in artifacts" >> $GITHUB_STEP_SUMMARY

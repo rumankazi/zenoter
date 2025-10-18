@@ -51,9 +51,92 @@ jobs:
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
           echo "🔍 Running semantic-release in dry-run mode..."
-          echo "📋 This will show what WOULD happen without making any changes"
+          echo "📋 This will show what WOULD happen when merged to main"
+          echo "📋 Repository: ${{ github.repository }}"
+          echo "📋 PR Branch: ${{ github.head_ref || github.ref_name }}"
+          echo "📋 Base: ${{ github.base_ref || 'N/A' }}"
+          echo "📋 Testing from: temp-release-preview (main + PR changes)"
           echo ""
-          pnpm exec semantic-release --dry-run --debug
+
+          # Run dry-run and capture output
+          set +e
+          pnpm exec semantic-release --dry-run --debug 2>&1 | tee dry-run.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+
+          echo ""
+          echo "📊 Exit code: $EXIT_CODE"
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Dry run failed with exit code $EXIT_CODE"
+            echo "📋 This means the actual release would fail!"
+            exit $EXIT_CODE
+          fi
+
+      - name: Upload dry-run logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-run-logs
+          path: dry-run.log
+          retention-days: 1
+
+      - name: Extract version from logs
+        id: extract
+        if: always()
+        run: |
+          if [ -f dry-run.log ]; then
+            # Case insensitive search for version
+            if grep -iq "release version is" dry-run.log; then
+              VERSION=$(grep -ioP "(the )?next release version is \K[0-9]+\.[0-9]+\.[0-9]+" dry-run.log | head -1)
+              echo "version=$VERSION" >> $GITHUB_OUTPUT
+              echo "has_release=true" >> $GITHUB_OUTPUT
+              echo "✅ Found version: $VERSION"
+            elif grep -iq "no relevant changes" dry-run.log; then
+              echo "has_release=false" >> $GITHUB_OUTPUT
+              echo "ℹ️  No release needed"
+            else
+              echo "has_release=unknown" >> $GITHUB_OUTPUT
+              echo "⚠️  Could not determine release status"
+            fi
+          fi
+
+      - name: Comment on PR with version
+        if: github.event_name == 'pull_request' && steps.extract.outputs.has_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.extract.outputs.version }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          COMMIT_COUNT=$(grep -oP 'Analysis of \K[0-9]+' dry-run.log | head -1 || echo 'unknown')
+
+          gh pr comment $PR_NUMBER --body "## 🎯 Release Preview
+
+          This PR will trigger release **v$VERSION** when merged to \`main\`.
+
+          ### 📋 Details
+          - **Version**: v$VERSION
+          - **Branch**: \`${{ github.head_ref }}\`
+          - **Commits**: $COMMIT_COUNT
+
+          > 💡 To release: merge to \`main\`, then merge \`main\` → \`release\` branch" --edit-last || gh pr comment $PR_NUMBER --body "## 🎯 Release Preview
+
+          This PR will trigger release **v$VERSION** when merged to \`main\`.
+
+          ### 📋 Details
+          - **Version**: v$VERSION
+          - **Branch**: \`${{ github.head_ref }}\`
+          - **Commits**: $COMMIT_COUNT
+
+          > 💡 To release: merge to \`main\`, then merge \`main\` → \`release\` branch"
+
+      - name: Comment on PR no release
+        if: github.event_name == 'pull_request' && steps.extract.outputs.has_release == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          gh pr comment $PR_NUMBER --body "ℹ️ **No Release** - This PR will not trigger a release (no relevant commits)" --edit-last || gh pr comment $PR_NUMBER --body "ℹ️ **No Release** - This PR will not trigger a release (no relevant commits)"
 
       - name: Summary
         if: always()
