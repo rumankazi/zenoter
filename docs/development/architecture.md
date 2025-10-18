@@ -268,9 +268,9 @@ zenoter/
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
-├── electron-builder.json           # Build configuration
+├── electron-builder.yml           # Build configuration
 ├── ARCHITECTURE.md                 # This file
-├── PLAN.md                         # Development plan
+├── plan.md                         # Development plan
 └── README.md
 ```
 

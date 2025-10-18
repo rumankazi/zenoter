@@ -1,20 +1,5 @@
-# ⚠️ CRITICAL: Avoid Accidental Major Releases!
-
+---
 **DO NOT use `BREAKING CHANGE:` in your PR unless you intend a major release (v1.0.0, v2.0.0, etc.)**
-
-❌ **WRONG** (triggers major):
-
-```
-BREAKING CHANGE: none
-BREAKING CHANGE: N/A
-```
-
-✅ **CORRECT** (no release keyword):
-
-```
-Just describe changes normally
-```
-
 ---
 
 ## Description
@@ -49,38 +34,6 @@ Closes #
 -
 -
 -
-
-## Testing
-
-<!-- Describe the testing you've done -->
-
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
-- [ ] E2E tests added/updated
-- [ ] Manual testing performed
-- [ ] All tests pass locally
-
-## Screenshots/Videos
-
-<!-- If applicable, add screenshots or videos to help explain your changes -->
-
-## Checklist
-
-<!-- Ensure all items are checked before requesting review -->
-
-- [ ] My code follows the project's code style guidelines
-
-## Phase Compliance
-
-<!-- Mark the current phase -->
-
-- [ ] Phase 1 - MVP (Local only, no cloud features)
-- [ ] Phase 2+ - Cloud features (requires feature flag)
-
-## Release Versioning
-
-- [ ] I understand how conventional commits affect versioning
-- [ ] I have NOT accidentally used `BREAKING CHANGE:` keyword
 
 ## Additional Notes
 

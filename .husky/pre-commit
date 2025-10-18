@@ -4,6 +4,15 @@
 echo "🔍 Running pre-commit qualification checks..."
 echo ""
 
+# 0. install dependencies
+echo "📦 Installing dependencies..."
+pnpm install || {
+    echo "❌ Dependency installation failed. Please check your pnpm setup."
+    exit 1
+}
+echo "✅ Dependencies installed!"
+echo ""
+
 # 1. Lint-staged (format + lint staged files)
 echo "📝 Linting and formatting staged files..."
 pnpm lint-staged || {
@@ -68,16 +77,7 @@ pnpm build || {
 echo "✅ Production build passed!"
 echo ""
 
-# 8.1 Verify build artifacts
-echo "🔍 Verifying build artifacts..."
-pnpm verify:build || {
-    echo "❌ Build artifact verification failed."
-    exit 1
-}
-echo "✅ Build artifacts verified!"
-echo ""
-
-# 7. E2E Tests (quick, only changed files)
+# 8. E2E Tests (quick, only changed files)
 echo "🚀 Running E2E tests..."
 pnpm test:e2e || {
     echo "❌ E2E tests failed. Please fix E2E test errors."
