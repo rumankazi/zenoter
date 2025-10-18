@@ -42,8 +42,81 @@ jobs:
 
             See https://www.conventionalcommits.org/ for more info.
 
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      tests: ${{ steps.filter.outputs.tests }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      docs: ${{ steps.filter.outputs.docs }}
+      config: ${{ steps.filter.outputs.config }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check changed files
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            # Mutually exclusive filters - each file belongs to exactly one category
+
+            # 1. Workflows - GitHub Actions (highest priority)
+            workflows:
+              - '.github/workflows/**'
+
+            # 2. Dependencies - package management
+            dependencies:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+
+            # 3. E2E tests - Playwright tests (before general tests)
+            e2e:
+              - 'src/test/e2e/**/*.e2e.{ts,tsx}'
+              - 'playwright.config.ts'
+
+            # 4. Unit/Integration tests - all test files
+            tests:
+              - 'src/test/**/*.test.{ts,tsx}'
+              - 'src/test/**/*.spec.{ts,tsx}'
+              - 'src/test/setup.ts'
+              - 'src/test/*/setup.ts'
+
+            # 5. Documentation - all docs and markdown
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - '.github/instructions/**'
+
+            # 6. Configuration - build/tooling config files
+            config:
+              - '*.config.{js,ts,cjs,mjs}'
+              - 'tsconfig*.json'
+              - '.nvmrc'
+              - '.prettierrc*'
+              - '.eslintrc*'
+              - 'commitlint.config.js'
+              - 'electron-builder.yml'
+              - 'renovate.json'
+              - '.editorconfig'
+              - '.gitignore'
+              - '.gitattributes'
+
+            # 7. Production code - app source (excluding tests, docs, config)
+            code:
+              - 'src/**/*.{ts,tsx}'
+              - 'src/**/*.{css,module.css}'
+              - 'electron/**/*.ts'
+              - 'index.html'
+              - 'main.css'
+
   update-pr:
     runs-on: ubuntu-latest
+    needs: detect-changes
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -164,6 +237,40 @@ jobs:
             const commitList = `${{ steps.commits.outputs.list }}`;
             const cspWarning = '${{ steps.checks.outputs.csp_warning }}';
 
+            // Get change detection results
+            const changes = {
+              code: '${{ needs.detect-changes.outputs.code }}' === 'true',
+              tests: '${{ needs.detect-changes.outputs.tests }}' === 'true',
+              e2e: '${{ needs.detect-changes.outputs.e2e }}' === 'true',
+              docs: '${{ needs.detect-changes.outputs.docs }}' === 'true',
+              config: '${{ needs.detect-changes.outputs.config }}' === 'true',
+              workflows: '${{ needs.detect-changes.outputs.workflows }}' === 'true',
+              dependencies: '${{ needs.detect-changes.outputs.dependencies }}' === 'true'
+            };
+
+            // Build dynamic CI/CD status
+            const codeOrTests = changes.code || changes.tests;
+            const ciStatus = `
+            ### 🚀 CI/CD Status (Based on Changed Files)
+
+            The following checks will run based on your changes:
+
+            **Code Quality & Tests:**
+            - ${codeOrTests ? '✅' : '⏭️'} **Code Quality**: ${codeOrTests ? 'Will run (code/test changes detected)' : 'Skipped (no code/test changes)'}
+            - ${codeOrTests ? '✅' : '⏭️'} **Unit Tests**: ${codeOrTests ? 'Will run (Vitest)' : 'Skipped (no code/test changes)'}
+            - ${changes.e2e ? '✅' : '⏭️'} **E2E Tests**: ${changes.e2e ? 'Will run (Playwright)' : 'Skipped (no E2E test changes)'}
+
+            **Build & Deploy:**
+            - ✅ **Build**: Will run (Electron app compilation + .exe generation)
+            - ${changes.docs ? '✅' : '⏭️'} **Docs Deploy**: ${changes.docs ? 'Will run (VitePress)' : 'Skipped (no doc changes)'}
+
+            **Infrastructure:**
+            - ${changes.workflows ? '✅' : '⏭️'} **Workflow Tests**: ${changes.workflows ? 'Will run (workflow changes detected)' : 'Skipped (no workflow changes)'}
+            - ${changes.dependencies ? '✅' : '⏭️'} **Dependency Check**: ${changes.dependencies ? 'Will run (dependency changes detected)' : 'Skipped (no dependency changes)'}
+
+            **Release:**
+            - 🚀 **Semantic Release**: Will run if merged to main (based on commit type)`;
+
             // Build statistics section
             let statsSection = '';
             const stats = {
@@ -207,13 +314,7 @@ jobs:
             - [ ] Animations use Framer Motion (60fps minimum)
 
             ${cspWarning ? `\n${cspWarning}\n` : ''}
-            ### 🚀 CI/CD Status
-
-            The following checks will run automatically:
-            - **Build**: Electron app compilation + .exe generation
-            - **Tests**: Unit (Vitest) + E2E (Playwright)
-            - **Linting**: ESLint + TypeScript strict mode
-            - **Release**: Semantic-release (if merged to main)
+            ${ciStatus}
 
             ---
 
