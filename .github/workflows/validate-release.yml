@@ -63,6 +63,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create preview config
+        run: |
+          echo '{"branches":["main","temp-release-preview"],"plugins":["@semantic-release/commit-analyzer","@semantic-release/release-notes-generator",["@semantic-release/changelog",{"changelogFile":"CHANGELOG.md"}],["@semantic-release/npm",{"npmPublish":false}]]}' > .releaserc.preview.json
+
       - name: Run semantic-release (dry-run)
         id: dry-run
         env:
@@ -80,9 +84,16 @@ jobs:
           echo "📋 Current branch: $(git branch --show-current)"
           echo ""
 
-          # Run dry-run and capture output
+          # Unset GitHub CI environment variables that semantic-release detects
+          unset GITHUB_ACTIONS
+          unset GITHUB_REF
+          unset GITHUB_HEAD_REF
+          unset GITHUB_BASE_REF
+          unset CI
+
+          # Run dry-run and capture output (using preview config without GitHub plugin)
           set +e
-          pnpm exec semantic-release --dry-run --no-ci --debug 2>&1 | tee dry-run.log
+          pnpm exec semantic-release --extends ./.releaserc.preview.json --dry-run --no-ci --debug 2>&1 | tee dry-run.log
           EXIT_CODE=${PIPESTATUS[0]}
           set -e
 
