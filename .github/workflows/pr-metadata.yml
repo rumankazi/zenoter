@@ -307,9 +307,6 @@ jobs:
               qualityChecklist += `- [ ] E2E tests pass (run \`pnpm test:e2e\`)\n`;
             }
 
-            // Build always runs
-            qualityChecklist += `- [ ] Windows .exe builds successfully\n`;
-
             // Code quality checks (only for actual code changes)
             if (changes.code) {
               qualityChecklist += `- [ ] No CSP violations (CSS Modules only, no inline styles)\n`;
