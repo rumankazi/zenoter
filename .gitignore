@@ -21,8 +21,12 @@ dist-ssr/
 
 # Electron
 out/
-electron-dist/
+electron-# Build artifacts
+dist/
 dist-electron/
+
+# Local semantic-release config (don't commit)
+.releaserc.local.json
 
 # Testing
 coverage/
