@@ -213,7 +213,7 @@ jobs:
           fi
 
           # Check if test files were modified
-          tests_modified="❌"
+          tests_modified="⏭️"
           if git diff origin/main..HEAD --name-only | grep -qE '\.test\.|\.spec\.|\.e2e\.'; then
             tests_modified="✅"
           fi
@@ -293,6 +293,46 @@ jobs:
               statsSection = `\n### 📊 Change Statistics\n${nonZeroStats}\n`;
             }
 
+            // Build dynamic quality checklist
+            let qualityChecklist = '### ✅ Zenoter Quality Checklist\n\n';
+
+            // Code/test-related checks
+            if (codeOrTests) {
+              qualityChecklist += `- ${{ steps.checks.outputs.tests_modified }} Tests modified/added\n`;
+              qualityChecklist += `- [ ] Unit test coverage ≥ 90% (run \`pnpm test:coverage\`)\n`;
+            }
+
+            // E2E checks (if E2E tests or code changed)
+            if (changes.e2e || changes.code) {
+              qualityChecklist += `- [ ] E2E tests pass (run \`pnpm test:e2e\`)\n`;
+            }
+
+            // Build always runs
+            qualityChecklist += `- [ ] Windows .exe builds successfully\n`;
+
+            // Code quality checks (only for actual code changes)
+            if (changes.code) {
+              qualityChecklist += `- [ ] No CSP violations (CSS Modules only, no inline styles)\n`;
+              qualityChecklist += `- [ ] Accessibility verified (ARIA attributes where needed)\n`;
+              qualityChecklist += `- [ ] Animations use Framer Motion (60fps minimum)\n`;
+            }
+
+            // Docs-specific checks
+            if (changes.docs) {
+              qualityChecklist += `- [ ] Documentation is clear and up-to-date\n`;
+              qualityChecklist += `- [ ] No broken links in documentation\n`;
+            }
+
+            // Config/workflow checks
+            if (changes.workflows) {
+              qualityChecklist += `- [ ] Workflow changes tested locally or in forked repo\n`;
+            }
+
+            if (changes.dependencies) {
+              qualityChecklist += `- [ ] Dependencies reviewed for security vulnerabilities\n`;
+              qualityChecklist += `- [ ] Lock file updated correctly\n`;
+            }
+
             const body = `## ${icon} ${badge}
 
             > **Semantic Release Impact**: This PR will trigger a **\`${{ steps.type.outputs.type }}\`** version bump.
@@ -303,15 +343,7 @@ jobs:
 
             ---
 
-            ### ✅ Zenoter Quality Checklist
-
-            - ${{ steps.checks.outputs.tests_modified }} Tests modified/added
-            - [ ] Unit test coverage ≥ 90% (run \`pnpm test:coverage\`)
-            - [ ] E2E tests pass (run \`pnpm test:e2e\`)
-            - [ ] Windows .exe builds successfully
-            - [ ] No CSP violations (CSS Modules only, no inline styles)
-            - [ ] Accessibility verified (ARIA attributes where needed)
-            - [ ] Animations use Framer Motion (60fps minimum)
+            ${qualityChecklist}
 
             ${cspWarning ? `\n${cspWarning}\n` : ''}
             ${ciStatus}
