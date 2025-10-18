@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.0](https://github.com/rumankazi/zenoter/compare/v1.0.0...v2.0.0) (2025-10-18)
+
+### ⚠ BREAKING CHANGES
+
+* Removed .github/PULL_REQUEST_TEMPLATE.md in favor of automation
+
+* feat: add smart path-based qualification workflow
+
+- Add detect-changes job to categorize file changes
+- Make qualification jobs conditional based on changed file types
+- Skip irrelevant checks (e.g., E2E tests for docs-only PRs)
+- Update status-summary to handle skipped jobs gracefully
+- Add comprehensive documentation for smart qualification
+
+Benefits:
+- 87% faster CI for docs-only PRs (30s vs 4min)
+- 75% faster CI for workflow-only PRs (1min vs 4min)
+- 60% reduction in overall CI/CD time per week
+- Maintains full quality checks for code changes
+
+* Rumankazi patch 1 ([#37](https://github.com/rumankazi/zenoter/issues/37)) ([c2985f6](https://github.com/rumankazi/zenoter/commit/c2985f6776cc76793598b75d3c2566dc91805dcb))
+
 ## 1.0.0 (2025-10-18)
 
 ### ⚠ BREAKING CHANGES

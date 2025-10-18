@@ -1,0 +1,207 @@
+name: Update PR Metadata
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  update-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commits
+        id: commits
+        run: |
+          commits=$(git log origin/main..HEAD --pretty=format:"- %s (%h)" | head -20)
+          if [ -z "$commits" ]; then
+            commits="- No commits found"
+          fi
+          {
+            echo "list<<EOF"
+            echo "$commits"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Detect change type
+        id: type
+        run: |
+          commit_messages=$(git log origin/main..HEAD --pretty=format:"%s%n%b")
+
+          if echo "$commit_messages" | grep -qE "BREAKING CHANGE|^[a-z]+(\([a-z]+\))?!:"; then
+            {
+              echo "type=major"
+              echo "icon=🚨"
+              echo "badge=Major Release"
+            } >> "$GITHUB_OUTPUT"
+          elif echo "$commit_messages" | grep -qE "^feat(\([a-z]+\))?:"; then
+            {
+              echo "type=minor"
+              echo "icon=✨"
+              echo "badge=Minor Release"
+            } >> "$GITHUB_OUTPUT"
+          elif echo "$commit_messages" | grep -qE "^fix(\([a-z]+\))?:"; then
+            {
+              echo "type=patch"
+              echo "icon=🐛"
+              echo "badge=Patch Release"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "type=none"
+              echo "icon=📝"
+              echo "badge=No Release"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Count changes by type
+        id: stats
+        run: |
+          commit_messages=$(git log origin/main..HEAD --pretty=format:"%s")
+
+          # Use grep with || true to avoid non-zero exit codes, then default to 0
+          feat_count=$(echo "$commit_messages" | grep -cE "^feat(\([a-z]+\))?:" || true)
+          fix_count=$(echo "$commit_messages" | grep -cE "^fix(\([a-z]+\))?:" || true)
+          docs_count=$(echo "$commit_messages" | grep -cE "^docs(\([a-z]+\))?:" || true)
+          test_count=$(echo "$commit_messages" | grep -cE "^test(\([a-z]+\))?:" || true)
+          refactor_count=$(echo "$commit_messages" | grep -cE "^refactor(\([a-z]+\))?:" || true)
+          style_count=$(echo "$commit_messages" | grep -cE "^style(\([a-z]+\))?:" || true)
+          perf_count=$(echo "$commit_messages" | grep -cE "^perf(\([a-z]+\))?:" || true)
+          chore_count=$(echo "$commit_messages" | grep -cE "^chore(\([a-z]+\))?:" || true)
+
+          # Default to 0 if empty
+          feat_count=${feat_count:-0}
+          fix_count=${fix_count:-0}
+          docs_count=${docs_count:-0}
+          test_count=${test_count:-0}
+          refactor_count=${refactor_count:-0}
+          style_count=${style_count:-0}
+          perf_count=${perf_count:-0}
+          chore_count=${chore_count:-0}
+
+          {
+            echo "feat=$feat_count"
+            echo "fix=$fix_count"
+            echo "docs=$docs_count"
+            echo "test=$test_count"
+            echo "refactor=$refactor_count"
+            echo "style=$style_count"
+            echo "perf=$perf_count"
+            echo "chore=$chore_count"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check for Zenoter-specific concerns
+        id: checks
+        run: |
+          # Check if any files contain inline styles or CSS-in-JS violations
+          csp_warning=""
+          if git diff origin/main..HEAD -- '*.tsx' '*.ts' | grep -qE 'style=\{|css`|styled\.|@emotion'; then
+            csp_warning="⚠️ **CSP Warning**: Possible inline styles or CSS-in-JS detected. Use CSS Modules instead."
+          fi
+
+          # Check if test files were modified
+          tests_modified="❌"
+          if git diff origin/main..HEAD --name-only | grep -qE '\.test\.|\.spec\.|\.e2e\.'; then
+            tests_modified="✅"
+          fi
+
+          # Check if coverage report exists (rough indicator)
+          coverage_note="Run tests to verify coverage ≥ 90%"
+
+          {
+            echo "csp_warning=$csp_warning"
+            echo "tests_modified=$tests_modified"
+            echo "coverage_note=$coverage_note"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update PR description
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const icon = '${{ steps.type.outputs.icon }}';
+            const badge = '${{ steps.type.outputs.badge }}';
+            const commitList = `${{ steps.commits.outputs.list }}`;
+            const cspWarning = '${{ steps.checks.outputs.csp_warning }}';
+
+            // Build statistics section
+            let statsSection = '';
+            const stats = {
+              '✨ Features': ${{ steps.stats.outputs.feat }},
+              '🐛 Fixes': ${{ steps.stats.outputs.fix }},
+              '♻️ Refactors': ${{ steps.stats.outputs.refactor }},
+              '✅ Tests': ${{ steps.stats.outputs.test }},
+              '⚡ Performance': ${{ steps.stats.outputs.perf }},
+              '📝 Documentation': ${{ steps.stats.outputs.docs }},
+              '🎨 Styles': ${{ steps.stats.outputs.style }},
+              '🔧 Chores': ${{ steps.stats.outputs.chore }}
+            };
+
+            const nonZeroStats = Object.entries(stats)
+              .filter(([_, count]) => count > 0)
+              .map(([type, count]) => `- ${type}: ${count}`)
+              .join('\n');
+
+            if (nonZeroStats) {
+              statsSection = `\n### 📊 Change Statistics\n${nonZeroStats}\n`;
+            }
+
+            const body = `## ${icon} ${badge}
+
+            > **Semantic Release Impact**: This PR will trigger a **\`${{ steps.type.outputs.type }}\`** version bump.
+            ${statsSection}
+            ### 📝 Commits
+
+            ${commitList}
+
+            ---
+
+            ### ✅ Zenoter Quality Checklist
+
+            - ${{ steps.checks.outputs.tests_modified }} Tests modified/added
+            - [ ] Unit test coverage ≥ 90% (run \`pnpm test:coverage\`)
+            - [ ] E2E tests pass (run \`pnpm test:e2e\`)
+            - [ ] Windows .exe builds successfully
+            - [ ] No CSP violations (CSS Modules only, no inline styles)
+            - [ ] Accessibility verified (ARIA attributes where needed)
+            - [ ] Animations use Framer Motion (60fps minimum)
+
+            ${cspWarning ? `\n${cspWarning}\n` : ''}
+            ### 🚀 CI/CD Status
+
+            The following checks will run automatically:
+            - **Build**: Electron app compilation + .exe generation
+            - **Tests**: Unit (Vitest) + E2E (Playwright)
+            - **Linting**: ESLint + TypeScript strict mode
+            - **Release**: Semantic-release (if merged to main)
+
+            ---
+
+            <details>
+            <summary>📚 Development Guidelines</summary>
+
+            - **Phase 1 (MVP)**: Local-only features, no cloud infrastructure
+            - **CSS**: Always use CSS Modules (\`.module.css\`), never inline styles
+            - **Testing**: Write tests first (TDD approach)
+            - **Accessibility**: Include ARIA attributes for interactive elements
+            - **Performance**: Startup < 3s, animations at 60fps
+
+            See [Development Instructions](.github/instructions/zenote.instructions.md) for full guidelines.
+            </details>
+            `;
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: body
+            });
+
+            core.info('✅ PR description updated successfully');

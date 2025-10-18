@@ -1,6 +1,6 @@
 {
   "name": "zenoter",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "A modern, animated note-taking app for developers",
   "main": "dist-electron/main/index.js",
