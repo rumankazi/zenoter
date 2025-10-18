@@ -270,7 +270,7 @@ zenoter/
 ├── vite.config.ts
 ├── electron-builder.json           # Build configuration
 ├── ARCHITECTURE.md                 # This file
-├── PLAN.md                         # Development plan
+├── plan.md                         # Development plan
 └── README.md
 ```
 

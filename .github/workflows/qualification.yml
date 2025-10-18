@@ -172,7 +172,151 @@ jobs:
             exit 1
           fi
 
-  # Job 6: Security Audit
+  # Job 6: Smart Build Artifact Verification (Windows)
+  verify-build-artifacts:
+    name: Verify Build Artifacts
+    runs-on: windows-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      should-verify: ${{ steps.check-changes.outputs.should-verify }}
+      artifacts-verified: ${{ steps.verify.outputs.artifacts-verified }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check for relevant file changes
+        id: check-changes
+        shell: bash
+        run: |
+          echo "🔍 Checking for changes in build-relevant files..."
+
+          # Define patterns for files that affect the build
+          PATTERNS=(
+            "electron/**"
+            "electron-builder.yml"
+            "vite.config.ts"
+            "package.json"
+            "pnpm-lock.yaml"
+            "src/main.tsx"
+            "index.html"
+            "scripts/**"
+          )
+
+          # Get changed files in this PR
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+
+          # Check if any changed file matches our patterns
+          SHOULD_VERIFY=false
+          for pattern in "${PATTERNS[@]}"; do
+            if echo "$CHANGED_FILES" | grep -qE "^${pattern//\*/.+}"; then
+              echo "✓ Found changes matching pattern: $pattern"
+              SHOULD_VERIFY=true
+            fi
+          done
+
+          if [ "$SHOULD_VERIFY" = true ]; then
+            echo "should-verify=true" >> $GITHUB_OUTPUT
+            echo "✅ Build artifact verification needed"
+          else
+            echo "should-verify=false" >> $GITHUB_OUTPUT
+            echo "⏭️  Skipping build artifact verification (no relevant changes)"
+          fi
+
+      - name: Setup pnpm
+        if: steps.check-changes.outputs.should-verify == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        if: steps.check-changes.outputs.should-verify == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        if: steps.check-changes.outputs.should-verify == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        if: steps.check-changes.outputs.should-verify == 'true'
+        run: pnpm run build
+
+      - name: Build Windows installers
+        if: steps.check-changes.outputs.should-verify == 'true'
+        run: pnpm run electron:build
+
+      - name: Verify artifacts exist
+        if: steps.check-changes.outputs.should-verify == 'true'
+        id: verify
+        shell: bash
+        run: |
+          echo "🔍 Checking for build artifacts..."
+
+          if ! ls dist/*.exe >/dev/null 2>&1; then
+            echo "❌ ERROR: No .exe installer found!"
+            echo "artifacts-verified=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          if ! ls dist/*.zip >/dev/null 2>&1; then
+            echo "❌ ERROR: No .zip archive found!"
+            echo "artifacts-verified=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # List artifacts
+          echo "✅ Build artifacts verified:"
+          ls -lh dist/*.exe dist/*.zip
+
+          # Check file sizes (should be > 100MB)
+          EXE_SIZE=$(stat -c%s dist/*.exe 2>/dev/null || stat -f%z dist/*.exe)
+          ZIP_SIZE=$(stat -c%s dist/*.zip 2>/dev/null || stat -f%z dist/*.zip)
+
+          if [ "$EXE_SIZE" -lt 104857600 ]; then
+            echo "❌ ERROR: Installer too small ($EXE_SIZE bytes), build may be incomplete"
+            echo "artifacts-verified=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          if [ "$ZIP_SIZE" -lt 104857600 ]; then
+            echo "❌ ERROR: ZIP too small ($ZIP_SIZE bytes), build may be incomplete"
+            echo "artifacts-verified=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "✅ All artifacts verified successfully"
+          echo "artifacts-verified=true" >> $GITHUB_OUTPUT
+
+      - name: Upload artifacts for inspection
+        if: steps.check-changes.outputs.should-verify == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers-pr-${{ github.event.pull_request.number }}
+          path: |
+            dist/*.exe
+            dist/*.zip
+          retention-days: 7
+
+      - name: Comment on PR
+        if: steps.check-changes.outputs.should-verify == 'true' && steps.verify.outputs.artifacts-verified == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **Build Artifact Verification Passed**\n\nWindows installers were successfully built and verified:\n- ✓ .exe installer exists\n- ✓ .zip archive exists\n- ✓ File sizes are valid (>100MB)\n\nArtifacts are available for download in the workflow run.'
+            })
+
+  # Job 7: Security Audit
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -197,11 +341,11 @@ jobs:
         run: pnpm audit --audit-level moderate
         continue-on-error: true
 
-  # Job 7: Status Summary
+  # Job 8: Status Summary
   status-summary:
     name: Status Summary
     runs-on: ubuntu-latest
-    needs: [code-quality, type-check, test, e2e-tests, build, security]
+    needs: [code-quality, type-check, test, e2e-tests, build, verify-build-artifacts, security]
     if: always()
     steps:
       - name: Check job statuses
@@ -211,6 +355,7 @@ jobs:
           echo "Tests: ${{ needs.test.result }}"
           echo "E2E Tests: ${{ needs.e2e-tests.result }}"
           echo "Build: ${{ needs.build.result }}"
+          echo "Verify Build Artifacts: ${{ needs.verify-build-artifacts.result }}"
           echo "Security: ${{ needs.security.result }}"
 
       - name: Verify all jobs passed
@@ -219,7 +364,8 @@ jobs:
           needs.type-check.result != 'success' ||
           needs.test.result != 'success' ||
           needs.e2e-tests.result != 'success' ||
-          needs.build.result != 'success'
+          needs.build.result != 'success' ||
+          (needs.verify-build-artifacts.result != 'success' && needs.verify-build-artifacts.result != 'skipped')
         run: |
           echo "::error::One or more qualification checks failed"
           exit 1
@@ -230,6 +376,7 @@ jobs:
           needs.type-check.result == 'success' &&
           needs.test.result == 'success' &&
           needs.e2e-tests.result == 'success' &&
-          needs.build.result == 'success'
+          needs.build.result == 'success' &&
+          (needs.verify-build-artifacts.result == 'success' || needs.verify-build-artifacts.result == 'skipped')
         run: |
           echo "✅ All status checks passed!"

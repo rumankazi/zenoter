@@ -12,12 +12,10 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Build and verify artifacts BEFORE creating release
-  verify-build:
-    name: Verify Build Artifacts
+  # Build Windows installers for release
+  build-installers:
+    name: Build Windows Installers
     runs-on: windows-latest
-    outputs:
-      can-build: ${{ steps.verify.outputs.can-build }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -43,44 +41,11 @@ jobs:
       - name: Build Windows installers
         run: pnpm run electron:build
 
-      - name: Verify artifacts exist
-        id: verify
+      - name: List build artifacts
         shell: bash
         run: |
-          echo "🔍 Checking for build artifacts..."
-
-          if ! ls dist/*.exe >/dev/null 2>&1; then
-            echo "❌ ERROR: No .exe installer found!"
-            echo "can-build=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-          if ! ls dist/*.zip >/dev/null 2>&1; then
-            echo "❌ ERROR: No .zip archive found!"
-            echo "can-build=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-          # List artifacts
-          echo "✅ Build artifacts verified:"
+          echo "📦 Build artifacts:"
           ls -lh dist/*.exe dist/*.zip
-
-          # Check file sizes (should be > 100MB)
-          EXE_SIZE=$(stat -c%s dist/*.exe 2>/dev/null || stat -f%z dist/*.exe)
-          ZIP_SIZE=$(stat -c%s dist/*.zip 2>/dev/null || stat -f%z dist/*.zip)
-
-          if [ "$EXE_SIZE" -lt 104857600 ]; then
-            echo "❌ ERROR: Installer too small ($EXE_SIZE bytes), build may be incomplete"
-            exit 1
-          fi
-
-          if [ "$ZIP_SIZE" -lt 104857600 ]; then
-            echo "❌ ERROR: ZIP too small ($ZIP_SIZE bytes), build may be incomplete"
-            exit 1
-          fi
-
-          echo "✅ All artifacts verified successfully"
-          echo "can-build=true" >> $GITHUB_OUTPUT
 
       - name: Upload artifacts for release job
         uses: actions/upload-artifact@v4
@@ -93,8 +58,7 @@ jobs:
 
   release:
     name: Semantic Release
-    needs: verify-build
-    if: needs.verify-build.outputs.can-build == 'true'
+    needs: build-installers
     runs-on: ubuntu-latest
     outputs:
       new-release-published: ${{ steps.semantic.outputs.new-release-published }}
@@ -151,7 +115,7 @@ jobs:
   # Upload installers only if a new release was published
   upload-installers:
     name: Upload Windows Installers
-    needs: [verify-build, release]
+    needs: [build-installers, release]
     if: needs.release.outputs.new-release-published == 'true'
     runs-on: ubuntu-latest
     steps:
