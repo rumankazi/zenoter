@@ -65,9 +65,17 @@ jobs:
 
       - name: Create preview config
         run: |
-          # Backup original config and replace with preview version
+          # Create preview config by modifying production config
+          # 1. Add temp-release-preview to branches
+          # 2. Remove GitHub and Git plugins (don't need push permissions for dry-run)
+          cat .releaserc.json | jq '.branches += ["temp-release-preview"] | .plugins = [.plugins[] | select(.[0] != "@semantic-release/github" and .[0] != "@semantic-release/git")]' > .releaserc.preview.json
+
+          # Backup and replace
           mv .releaserc.json .releaserc.json.backup
-          echo '{"branches":["main","temp-release-preview"],"plugins":["@semantic-release/commit-analyzer","@semantic-release/release-notes-generator",["@semantic-release/changelog",{"changelogFile":"CHANGELOG.md"}],["@semantic-release/npm",{"npmPublish":false}]]}' > .releaserc.json
+          mv .releaserc.preview.json .releaserc.json
+
+          echo "Preview config created:"
+          cat .releaserc.json | jq '.branches'
 
       - name: Run semantic-release (dry-run)
         id: dry-run
