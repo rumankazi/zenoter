@@ -8,11 +8,16 @@ import { useTheme } from '../../context/ThemeContext';
 import type { FC } from 'react';
 import styles from './ThemeToggle.module.css';
 
+interface ThemeToggleProps {
+  /** Render inline (in toolbar) instead of fixed position */
+  inline?: boolean;
+}
+
 /**
  * ThemeToggle Component
  * Single tappable icon that smoothly transitions between sun and moon
  */
-export const ThemeToggle: FC = () => {
+export const ThemeToggle: FC<ThemeToggleProps> = ({ inline = false }) => {
   const { resolvedTheme, toggleTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -21,7 +26,7 @@ export const ThemeToggle: FC = () => {
       onClick={toggleTheme}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      className={styles.toggleButton}
+      className={inline ? styles.inlineButton : styles.toggleButton}
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
       aria-pressed={isDark}
       data-testid="theme-toggle"

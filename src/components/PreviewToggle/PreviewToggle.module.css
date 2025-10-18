@@ -1,0 +1,46 @@
+/**
+ * PreviewToggle Styles
+ * Positioned in top-right of editor area
+ */
+
+.toggleButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.toggleButton:active {
+  transform: scale(0.95);
+}
+
+.toggleButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.iconWrapper svg {
+  width: 100%;
+  height: 100%;
+}
