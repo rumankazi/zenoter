@@ -72,10 +72,8 @@
     "@vitejs/plugin-react": "^5.0.4",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
-    "app-builder-lib": "26.1.0",
     "concurrently": "^9.2.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
-    "dmg-builder": "26.1.0",
     "electron": "^38.3.0",
     "electron-builder": "^26.1.0",
     "electron-builder-squirrel-windows": "26.1.0",
@@ -94,7 +92,7 @@
     "wait-on": "^9.0.1"
   },
   "build": {
-    "appId": "com.zenoter.app",
+    "appId": "com.rumankazi.zenoter",
     "productName": "Zenoter",
     "directories": {
       "output": "dist"
@@ -103,7 +101,7 @@
       "dist/**/*",
       "dist-electron/**/*"
     ],
-    "publish": null,
+    "publish": "never",
     "win": {
       "target": [
         {
