@@ -1,8 +1,31 @@
 # Zenoter Architecture
 
+**Last Updated**: 2025-10-18  
+**Architecture Version**: 2.0 (Web-First + Monorepo)
+
 ## Overview
 
-Zenoter is a modern, developer-focused note-taking application that prioritizes beautiful animations and smooth user experience. Built with Electron and React, it offers a VS Code-like interface with powerful markdown editing capabilities, version control, and cross-platform synchronization.
+Zenoter is a modern, cloud-synced note-taking app for developers that prioritizes beautiful animations, smooth UX, and multi-device access. Built with a monorepo architecture, it shares core React components across web, mobile PWA, and desktop platforms.
+
+## 🎯 Strategic Architecture (Oct 2025 Pivot)
+
+### **Why Web-First + Monorepo?**
+
+**Previous Strategy** (Electron desktop-first):
+
+- ❌ Windows code signing costs $200-400/year
+- ❌ Slower time to market (installers, updates)
+- ❌ No mobile support
+- ❌ Single platform focus
+
+**New Strategy** (Web-first + monorepo):
+
+- ✅ Zero deployment costs (Vercel/Netlify free tier)
+- ✅ Instant updates (no installers)
+- ✅ Works on ALL devices from day 1
+- ✅ Mobile PWA = native-like experience
+- ✅ Desktop apps when users request (Phase 3+)
+- ✅ 85%+ code reuse across platforms
 
 ## Deployment Strategy
 
@@ -10,10 +33,10 @@ Zenoter is a modern, developer-focused note-taking application that prioritizes 
 
 We use feature flags and gradual rollouts to minimize infrastructure costs while maintaining flexibility. Our deployment strategy scales with user growth:
 
-1. **Phase 1 (0-100 users)**: Local-only, zero infrastructure
-2. **Phase 2 (100-1K users)**: Firebase free tier
-3. **Phase 3 (1K-10K users)**: Minimal GCP setup
-4. **Phase 4 (10K+ users)**: Full GCP with auto-scaling
+1. **Phase 1 (0-1K users)**: Web + PWA with Firebase free tier
+2. **Phase 2 (1K-10K users)**: Firestore paid tier
+3. **Phase 3 (10K+ users)**: PostgreSQL + Cloud Run
+4. **Phase 4 (User-requested)**: Desktop apps with Electron
 
 ### Feature Flags System
 
@@ -34,24 +57,51 @@ if (getFeatureFlag('CLOUD_SYNC')) {
 
 ### Infrastructure Architecture
 
-#### Current (Phase 1) - Zero Cost
+#### Current (Phase 1) - Web + Auth + Sync + Commits
 
 ```mermaid
-graph LR
-    A[Desktop App] --> B[Local SQLite]
-    A --> C[Local File System]
+graph TD
+    A[Web App] --> B[IndexedDB Cache]
+    A --> C[Firebase Auth]
+    A --> D[Firestore Sync]
+    A --> E[Commit Metadata]
+    A --> F[Cloud Storage Blobs]
+    G[PWA] --> B
+    G --> C
+    G --> D
+    H[Auto-commit Service] --> E
+    H --> F
+    I[Vercel CDN] --> A
 ```
 
-#### Phase 2 - Free Tier Services
+**Commit System Architecture**:
+
+- **Metadata**: Firestore (`users/{uid}/commits/{commitId}`) - timestamps, messages, sizes
+- **Blobs**: Cloud Storage (`commits/{uid}/{YYYY}/{MM}/{DD}/{timestamp}_{commitId}.json.gz`) - gzipped note snapshots
+- **Auto-commits**: Daily at midnight (local time), message: "Auto-save: {date}"
+- **On-demand** (Phase 4 premium): Manual "Commit now" button, custom messages
+
+#### Phase 2 - Mobile PWA
 
 ```mermaid
-graph LR
-    A[Desktop App] --> B[Local SQLite]
-    A --> D[Firebase Auth]
-    A --> E[Firestore]
-    F[Web PWA] --> D
-    F --> E
-    G[Netlify CDN] --> F
+graph TD
+    A[Web/PWA] --> B[IndexedDB]
+    A --> C[Firebase Auth]
+    A --> D[Firestore]
+    E[Service Worker] --> B
+    E --> F[Background Sync]
+    G[Push Notifications] --> A
+```
+
+#### Phase 3 - Desktop (When Requested)
+
+```mermaid
+graph TD
+    A[Desktop/Web/Mobile] --> B[Shared Core]
+    B --> C[IndexedDB/SQLite]
+    B --> D[Firebase Auth]
+    B --> E[Firestore]
+    F[Electron] --> A
 ```
 
 #### Phase 3 - Minimal GCP
@@ -66,31 +116,62 @@ graph LR
 
 ## Tech Stack Decisions
 
-### Core Framework: Electron + React 18+
+### Core Framework: React 18+
 
 **Why we chose this:**
 
-- **Electron**: Despite being heavier than Tauri (~150MB vs ~10MB), Electron provides mature ecosystem support for rich animations and complex UI interactions. Since we prioritized slick, modern animations over lightweight footprint, Electron's maturity and extensive library support made it the ideal choice.
-- **React 18+**: Offers concurrent features, extensive animation library ecosystem (Framer Motion), and large community support for complex UI patterns.
+- **React 18+**: Offers concurrent features, extensive animation library ecosystem (Framer Motion), and large community support for complex UI patterns
+- **Monorepo**: Share 85%+ code across web, mobile PWA, and desktop platforms
+- **Web-first**: Zero deployment costs, instant updates, works on all devices
+
+**Phase-Specific Frameworks:**
+
+- **Phase 1-2**: Vite (web + PWA) - Lightning-fast HMR, optimized builds
+- **Phase 3+**: Electron (desktop) - Mature ecosystem, when users request
 
 **Alternatives considered:**
 
 - Tauri: Lighter but less mature animation ecosystem
 - SolidJS/Svelte: Smaller bundle but fewer animation libraries
 
-### Editor: Monaco Editor
+### Editor: Platform-Specific for Optimal UX
 
-**Why we chose this:**
+**Why we chose platform-specific editors:**
+
+**Desktop/Web: Monaco Editor (3-5MB)**
 
 - Exact VS Code editing experience that developers expect
-- Built-in syntax highlighting for multiple languages
+- Built-in IntelliSense and advanced editing features
+- Multi-cursor editing, refactoring tools
 - Smooth scrolling and cursor animations
-- IntelliSense and advanced editing features
-- Worth the additional weight for superior UX
+- Worth the size for superior desktop UX
+- Production usage: VS Code, GitHub Codespaces
+
+**Mobile PWA: CodeMirror 6 (500KB)**
+
+- 85% smaller bundle (faster load on mobile networks)
+- Touch-optimized with native mobile selection
+- Battery-efficient (10-20MB memory vs 50-100MB)
+- Official mobile support (core feature, not experimental)
+- Production usage: Replit (40M users), Obsidian, MarkEdit
+- 699+ GitHub repos, 7.1k stars, active mobile community
+
+**Shared Interface:**
+
+```typescript
+interface EditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  language: string;
+  theme: 'light' | 'dark';
+  readOnly?: boolean;
+}
+```
 
 **Alternatives considered:**
 
-- CodeMirror 6: Lighter but less feature-rich
+- Monaco only: 3-5MB too heavy for mobile (slow load, battery drain)
+- CodeMirror only: Missing advanced desktop features (IntelliSense)
 - Custom textarea: Too much development overhead
 
 ### Animation Stack: Framer Motion + Lottie
@@ -122,6 +203,82 @@ graph LR
 - Redux Toolkit: Too much boilerplate for our needs
 - MobX: More complex than necessary
 - Context API: Insufficient for complex state
+
+### Commit Storage: Git-Like Versioning
+
+**Why we chose this approach:**
+
+**Architecture**:
+
+- **Daily auto-commits** (free): Automatic snapshot at midnight, 30-day retention
+- **On-demand commits** (premium): Manual "Commit now" button, 1-year retention
+- **Server-side enforcement**: Cloud Functions validate entitlement before creating commits
+- **Efficient storage**: Gzipped JSON blobs in Cloud Storage, metadata in Firestore
+
+**Data Model**:
+
+```typescript
+// Firestore: users/{uid}/commits/{commitId}
+interface CommitMetadata {
+  id: string; // UUID
+  timestamp: Timestamp;
+  message: string; // "Auto-save: 2025-10-18" or custom
+  commitType: 'auto' | 'on-demand';
+  sizeBytes: number;
+  storagePath: string; // Cloud Storage path
+  checksum: string; // SHA256 for integrity
+  notes: Array<{
+    // Index of included notes
+    noteId: string;
+    path: string;
+    title: string;
+  }>;
+}
+
+// Cloud Storage: commits/{uid}/{YYYY}/{MM}/{DD}/{timestamp}_{commitId}.json.gz
+interface CommitBlob {
+  version: string; // Schema version
+  timestamp: number;
+  notes: Note[]; // Full note snapshots
+  metadata: {
+    deviceId: string;
+    appVersion: string;
+  };
+}
+```
+
+**Retention & Limits**:
+
+- **Free tier**: 1 auto-daily commit, 30-day retention, 1 on-demand/month
+- **Premium tier**: Unlimited on-demand, 1-year retention, custom messages
+
+**Cost Estimation** (per 1,000 users):
+
+- Average commit size: 5 KB (text notes, gzipped)
+- Free users: 1 commit/day × 30 days = 150 KB/user → 150 MB total
+- Premium users (10%): 10 on-demand/month × 5 KB = 50 KB/user → 5 MB total
+- **Total storage**: ~155 MB/month for 1,000 users (~$0.004/month)
+- **Cloud Storage**: $0.026/GB/month (negligible cost)
+
+**Security**:
+
+- Commits are private (Firestore rules: only owner can read/write)
+- Blobs in Cloud Storage with signed URLs (short expiration)
+- Server-side validation prevents client-side entitlement bypass
+- Optional: End-to-end encryption for sensitive notes
+
+**UI/UX**:
+
+- History panel: Timeline view with date/time, message, size
+- Restore workflow: Preview diff → Confirm → Auto-create pre-restore commit
+- Premium CTA: Modal explaining benefits when free user taps "Commit now"
+- Progress indicators: Committing → Success/failure toast
+
+**Alternatives considered**:
+
+- Full Git integration: Too complex for users, heavy client-side operations
+- Delta/diff storage: More complex restore logic, premature optimization
+- Client-only commits: Insecure, easily bypassed paywall
 
 ### Styling: CSS Modules
 
@@ -186,7 +343,80 @@ graph LR
 - Integrated with Firebase
 - Pay-per-use model ideal for gradual scaling
 
-## Folder Structure
+## Monorepo Structure
+
+**Phase 1-2 (Current): Preparing for monorepo**
+
+```
+zenoter/
+├── packages/
+│   ├── core/                      # @zenoter/core (shared React components)
+│   │   ├── components/
+│   │   │   ├── Editor/
+│   │   │   │   ├── Editor.tsx            # Platform-agnostic wrapper
+│   │   │   │   ├── Editor.types.ts       # Shared EditorProps interface
+│   │   │   │   ├── MonacoEditor.tsx      # Desktop/Web implementation
+│   │   │   │   ├── CodeMirrorEditor.tsx  # Mobile PWA implementation
+│   │   │   │   └── EditorSkeleton.tsx    # Loading state
+│   │   │   ├── FileTree/
+│   │   │   │   ├── FileTree.tsx
+│   │   │   │   ├── TreeNode.tsx
+│   │   │   │   └── DragDropContext.tsx
+│   │   │   ├── ThemeToggle/
+│   │   │   └── common/
+│   │   ├── hooks/
+│   │   │   ├── useFeatureFlag.ts
+│   │   │   ├── useKeyboardShortcut.ts
+│   │   │   └── useTheme.ts
+│   │   ├── animations/
+│   │   │   ├── presets.ts
+│   │   │   └── transitions.ts
+│   │   └── styles/
+│   │       ├── theme.css
+│   │       └── variables.css
+│   │
+│   ├── shared/                    # @zenoter/shared (business logic)
+│   │   ├── auth/
+│   │   │   ├── AuthService.ts           # Firebase Auth wrapper
+│   │   │   ├── AuthProvider.tsx         # React context
+│   │   │   └── auth.types.ts
+│   │   ├── sync/
+│   │   │   ├── SyncEngine.ts            # Sync logic
+│   │   │   ├── ConflictResolver.ts      # Conflict resolution
+│   │   │   └── sync.types.ts
+│   │   ├── storage/
+│   │   │   ├── StorageAdapter.ts        # Abstract interface
+│   │   │   ├── IndexedDBAdapter.ts      # Web/PWA implementation
+│   │   │   ├── SQLiteAdapter.ts         # Desktop implementation (Phase 3)
+│   │   │   └── storage.types.ts
+│   │   └── services/
+│   │       ├── featureFlag.service.ts
+│   │       └── analytics.service.ts
+│   │
+│   ├── web/                       # @zenoter/web (Vite + web-specific)
+│   │   ├── src/
+│   │   │   ├── App.tsx
+│   │   │   ├── main.tsx
+│   │   │   └── vite-env.d.ts
+│   │   ├── index.html
+│   │   ├── vite.config.ts
+│   │   └── package.json
+│   │
+│   └── desktop/                   # @zenoter/desktop (Electron, Phase 3+)
+│       ├── electron/
+│       │   ├── main.ts
+│       │   └── preload.ts
+│       ├── src/
+│       │   └── App.tsx            # Desktop-specific wrapper
+│       └── package.json
+│
+├── docs/                          # VitePress documentation
+├── scripts/                       # Build & utility scripts
+├── pnpm-workspace.yaml            # Workspace configuration
+└── package.json                   # Root package.json
+```
+
+## Folder Structure (Legacy - Before Monorepo)
 
 ```
 zenoter/

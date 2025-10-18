@@ -19,7 +19,7 @@ hero:
 features:
   - icon: 📝
     title: Powerful Markdown Editor
-    details: Full-featured markdown support with syntax highlighting, live preview, and VS Code's Monaco Editor at its core
+    details: Full-featured markdown support with syntax highlighting, live preview, and intelligent platform-specific editors (Monaco for desktop, CodeMirror for mobile)
     link: /features/editor
 
   - icon: 🎨

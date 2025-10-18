@@ -14,6 +14,8 @@ Provide project context and coding guidelines that AI should follow when generat
 
 Zenoter is a modern, animated note-taking app for developers with VS Code-like interface. We prioritize smooth animations and great UX over lightweight footprint.
 
+**🎯 NEW STRATEGY (Oct 2025)**: Web-first + mobile PWA → Desktop apps later. Monorepo architecture with shared code across all platforms. Auth + cloud sync from day 1 for multi-device experience.
+
 ## 🔄 CRITICAL: Always Update Progress
 
 **WHEN OPENING THIS PROJECT**, Copilot should ALWAYS:
@@ -28,39 +30,60 @@ This ensures continuity across sessions and different devices.
 
 ## Current Development Phase
 
-**PHASE 1 - MVP (Local Only)**
+**PHASE 1 - MVP (Web-First with Auth + Sync)**
 
-- Focus: Core features, local storage only
-- No cloud infrastructure yet
-- Feature flags disabled for cloud features
-- Target: Windows desktop + Web PWA
+- Focus: Web app with cloud sync, multi-device support
+- Auth: Firebase Auth (email/password + OAuth)
+- Database: IndexedDB (local) + Firestore (cloud)
+- Target: Web PWA first → Mobile PWA → Desktop (Phase 3+)
+- Monorepo: Shared `@zenoter/core` package for all platforms
 
 ## Tech Stack (ALWAYS USE THESE)
 
-- Desktop: Electron + React 18+
-- Editor: Monaco Editor
+**Monorepo Architecture:**
+
+- **Core**: React 18+ components (shared across all platforms)
+- **Web/PWA**: Vite + IndexedDB + Firebase
+- **Desktop** (Phase 3+): Electron + SQLite
+- **Mobile Native** (Phase 4+): React Native
+
+**Shared Stack:**
+
+- Editor: Monaco Editor (desktop/web), CodeMirror 6 (mobile PWA)
 - Animations: Framer Motion + Lottie
 - State: Zustand
-- Styling: CSS Modules (NOT CSS-in-JS - see CSP requirements)
-- Database: SQLite (local), PostgreSQL (cloud - Phase 3+)
+- Styling: CSS Modules (NOT CSS-in-JS - CSP compliant)
 - Testing: Vitest (unit/integration), Playwright (e2e)
-- Build: Vite
-- Cloud (Phase 2+): Firebase → GCP gradual migration
+- Build: pnpm workspaces + Turborepo (optional)
+
+**Backend:**
+
+- Auth: Firebase Auth (OAuth + email/password)
+- Database: IndexedDB (local cache) + Firestore (cloud)
+- Hosting: Vercel/Netlify (web) + GitHub Releases (desktop)
+- Future: PostgreSQL on Supabase (Phase 3+)
 
 ## Active Feature Flags
 
 ```typescript
-// Phase 1 - All local features enabled
-LOCAL_STORAGE: true,
+// Phase 1 - Core features + Auth + Sync
+LOCAL_STORAGE: true,        // IndexedDB for offline-first
 BASIC_EDITOR: true,
 FILE_TREE: true,
 MARKDOWN_PREVIEW: true,
 DARK_MODE: true,
+AUTH_SYSTEM: true,          // Firebase Auth enabled
+CLOUD_SYNC: true,           // Firestore sync enabled
+ON_DEMAND_COMMITS: false,   // Premium: Manual commits (paywall)
 
-// Phase 2+ - Currently disabled
-CLOUD_SYNC: false,
-AUTH_SYSTEM: false,
-VERSION_CONTROL: false,
+// Phase 2+ - Advanced features
+REAL_TIME_SYNC: false,      // WebSocket sync (premium)
+VERSION_CONTROL: false,     // Git-like versioning
+COLLABORATION: false,       // Real-time collaborative editing
+
+// Phase 3+ - Desktop specific
+DESKTOP_APP: false,         // Electron desktop app
+OFFLINE_SQLITE: false,      // Desktop SQLite storage
 ```
 
 ## Development Principles
@@ -375,28 +398,43 @@ src/test/
 
 ## Phase-Specific Instructions
 
-### Current: Phase 1 (MVP)
+### Current: Phase 1 (Web MVP with Auth + Sync)
 
-- DO NOT implement cloud features yet
-- DO NOT add authentication
-- DO NOT worry about scaling
-- FOCUS ON core editor and local storage
-- FOCUS ON smooth animations
-- FOCUS ON Windows compatibility
+- ✅ IMPLEMENT Firebase Auth (email/password + Google OAuth)
+- ✅ IMPLEMENT cloud sync with Firestore
+- ✅ BUILD offline-first architecture (IndexedDB + background sync)
+- ✅ DEPLOY web app to Vercel/Netlify
+- ✅ FOCUS ON smooth animations and modern UX
+- ✅ CREATE monorepo structure (`@zenoter/core` shared package)
+- ✅ USE Monaco Editor for desktop/web (full VS Code experience)
+- ✅ USE CodeMirror 6 for mobile PWA (500KB, touch-optimized, production-proven)
+- ⚠️ DO NOT worry about Electron/Desktop yet (Phase 3+)
+- ⚠️ DO NOT implement real-time collaboration yet (Phase 2+)
 
-### Future: Phase 2
+### Phase 2: Mobile PWA + Advanced Features
 
-When we reach Phase 2, we will:
+- Add PWA manifest and service workers
+- Implement push notifications
+- Add offline queue for failed syncs
+- Real-time sync (WebSocket)
+- Version history
 
-- Enable Firebase integration
-- Add authentication
-- Implement cloud sync
-- Deploy web version
+### Phase 3: Desktop Apps (When Users Request)
+
+- Electron app using `@zenoter/core`
+- SQLite for desktop storage
+- Same auth/sync as web
+- Windows → macOS → Linux
+
+### Phase 4: Native Mobile (If Needed)
+
+- React Native using shared business logic
+- iOS and Android apps
 
 ## Quick References
 
-- [Architecture](../../ARCHITECTURE.md)
-- [Development Plan](../../PLAN.md)
+- [Architecture](../../docs/development/architecture.md)
+- [Development Plan](../../docs/development/plan.md)
 - [Documentation Site](https://rumankazi.github.io/zenoter/)
 
 ## Phase 1 Feature Completion Checklist

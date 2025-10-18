@@ -6,11 +6,12 @@ Zenoter is packed with features designed specifically for developers who take no
 
 ### 🎯 Core Editor
 
-- **Monaco Editor**: The same editor that powers VS Code
+- **Platform-Specific Editors**: Monaco Editor for desktop/web (full VS Code experience), CodeMirror 6 for mobile PWA (touch-optimized)
 - **Syntax Highlighting**: Support for 100+ programming languages
-- **IntelliSense**: Smart completions for markdown
-- **Multi-cursor Editing**: Edit multiple lines simultaneously
-- **Find & Replace**: With regex support
+- **IntelliSense**: Smart completions for markdown (desktop/web)
+- **Multi-cursor Editing**: Edit multiple lines simultaneously (desktop/web)
+- **Touch-Optimized**: Native mobile selection on phones (mobile PWA)
+- **Find & Replace**: With regex support on all platforms
 
 ### 📁 File Management
 

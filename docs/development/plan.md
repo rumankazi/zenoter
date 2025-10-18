@@ -1,12 +1,33 @@
 # Zenoter Development Plan & Progress Tracker
 
 **Project Start Date**: 2025-10-17  
-**Current Phase**: Phase 1 - MVP Development  
-**Last Updated**: 2025-10-17 18:30:00 UTC
+**Current Phase**: Phase 1 - Web MVP with Auth + Sync  
+**Last Updated**: 2025-10-18 22:00:00 UTC
+
+## 🎯 Strategic Pivot (October 2025)
+
+### Why We Changed Direction
+
+**Previous Plan** (Electron desktop-first):
+
+- ❌ Windows code signing: $200-400/year
+- ❌ App store approval delays
+- ❌ Update friction (installers)
+- ❌ No mobile support
+- ❌ Single platform initially
+
+**New Plan** (Web-first + monorepo):
+
+- ✅ Zero deployment costs (Vercel free tier)
+- ✅ Instant updates, no installers
+- ✅ Works on ALL devices from day 1
+- ✅ Mobile PWA = native-like on phones
+- ✅ Desktop when users request (Phase 3+)
+- ✅ Auth + sync from start = multi-device experience
 
 ## Overview
 
-This document tracks our development progress and serves as the single source of truth for project phases, feature flags, and deployment strategy. We follow an incremental release approach with feature flags to minimize infrastructure costs while maintaining flexibility to scale.
+This document tracks our development progress and serves as the single source of truth for project phases, feature flags, and deployment strategy. We follow a web-first monorepo approach with shared React components across all platforms.
 
 ## Documentation Strategy
 
@@ -31,24 +52,36 @@ This document tracks our development progress and serves as the single source of
 
 ## Infrastructure Strategy (Cost-Conscious Approach)
 
-### Current State (0-100 users)
+### Phase 1: MVP (0-1K users) - Current
 
-- **Database**: SQLite local only
-- **Auth**: Local only (no cloud)
-- **Hosting**: GitHub Releases for downloads
-- **Documentation**: GitHub Pages (free)
-- **Cost**: $0/month
+- **Frontend**: Web app + PWA
+- **Auth**: Firebase Auth (free tier: 50k users/month)
+- **Database**: IndexedDB (local) + Firestore (free tier: 50k reads/day)
+- **Hosting**: Vercel/Netlify (free tier)
+- **Monitoring**: Sentry (free tier)
+- **Cost**: $0/month ✅
 
-### Phase 2 (100-1,000 users)
+### Phase 2: Growth (1K-10K users)
 
-- **Database**: SQLite local + Firebase Firestore (free tier)
-- **Auth**: Firebase Auth (free tier - 10k/month)
-- **Hosting**: GitHub Releases + Netlify (web PWA)
-- **Storage**: Firebase Storage (5GB free)
-- **Documentation**: GitHub Pages with custom domain
-- **Cost**: $0-10/month
+- **Database**: Firestore paid tier (~$25/month)
+- **CDN**: Cloudflare (free)
+- **Monitoring**: Sentry paid (~$10/month)
+- **Cost**: $35-55/month
 
-### Phase 3 (1,000-10,000 users)
+### Phase 3: Scale (10K+ users)
+
+- **Database**: PostgreSQL on Supabase ($25/month)
+- **API**: Cloud Run ($30-50/month)
+- **Storage**: Cloud Storage ($10/month)
+- **Monitoring**: Advanced analytics ($20/month)
+- **Cost**: $85-105/month
+
+### Phase 4: Desktop (When Requested)
+
+- Add Electron apps using shared `@zenoter/core`
+- SQLite for desktop storage
+- When: 100+ user requests OR $500+ MRR
+- Cost: +$0 (GitHub Releases hosting)
 
 - **Database**: SQLite local + Cloud SQL (PostgreSQL - smallest instance)
 - **Auth**: Firebase Auth or GCP Identity Platform
@@ -68,217 +101,205 @@ This document tracks our development progress and serves as the single source of
 ```typescript
 // src/config/featureFlags.ts
 export const FEATURE_FLAGS = {
-  // Phase 1 (Always enabled in MVP)
-  LOCAL_STORAGE: true,
+  // Phase 1 - Core + Auth + Sync (All enabled)
+  LOCAL_STORAGE: true, // IndexedDB for offline-first
   BASIC_EDITOR: true,
   FILE_TREE: true,
   MARKDOWN_PREVIEW: true,
   DARK_MODE: true,
+  AUTH_SYSTEM: true, // Firebase Auth
+  CLOUD_SYNC: true, // Firestore sync
+  ON_DEMAND_COMMITS: false, // Premium: Manual commits (paywall)
 
-  // Phase 2 (Gradual rollout)
-  CLOUD_SYNC: false,
-  AUTH_SYSTEM: false,
-  VERSION_CONTROL: false,
+  // Phase 2 - Advanced features (Disabled)
+  REAL_TIME_SYNC: false, // WebSocket sync (premium)
+  VERSION_CONTROL: false, // Git-like versioning
+  COLLABORATION: false, // Real-time collaborative editing
   ADVANCED_SEARCH: false,
 
-  // Phase 3 (Premium features)
-  REAL_TIME_SYNC: false,
-  COLLABORATION: false,
-  AI_SUGGESTIONS: false,
+  // Phase 3 - Premium features (Disabled)
   CUSTOM_THEMES: false,
+  AI_SUGGESTIONS: false,
 
-  // Phase 4 (Future)
+  // Phase 4 - Desktop/Mobile (Disabled)
+  DESKTOP_APP: false, // Electron app
+  MOBILE_NATIVE: false, // React Native
   PLUGIN_SYSTEM: false,
-  MOBILE_APPS: false,
-};
-
-// Environment-based override
-export const getFeatureFlag = (flag: keyof typeof FEATURE_FLAGS) => {
-  // Check remote config first (when implemented)
-  // Fall back to local config
-  return FEATURE_FLAGS[flag];
 };
 ```
+
+};
+
+````
 
 ## Development Phases
 
-### 🚧 Phase 1: MVP (Weeks 1-6) - CURRENT
+### 🚧 Phase 1: Web MVP with Auth + Sync (4 weeks) - CURRENT
 
-**Target Date**: 2025-11-28  
-**Status**: In Progress  
-**Infrastructure**: Local only, $0 cost
+**Target Date**: 2025-11-15
+**Status**: In Progress (Week 1)
+**Infrastructure**: Vercel + Firebase free tier, $0 cost
 
-#### Week 1-2: Foundation ✅ (2025-10-17 to 2025-10-31)
+### Week 1: Monorepo Setup (Oct 18-24)
 
-- [x] Project setup with Electron + React + Vite
-- [x] Configure TypeScript strict mode
-- [x] Set up Vitest + Playwright
-- [x] Create base component structure
-- [x] Implement theme system (dark/light/auto)
-- [x] Set up GitHub repository with CI/CD
-- [x] **Initialize VitePress documentation**
-- [x] **Set up GitHub Pages deployment**
-- [x] **Modern theme toggle with icon morph animation**
-- [x] **Full CSS variable system for theming**
-- [x] **Comprehensive visual E2E tests**
+**Goal**: Extract shared code into packages, set up workspace, create editor abstraction
 
-#### Week 3-4: Core Features (2025-11-01 to 2025-11-14)
+**Tasks**:
+1. Create `pnpm-workspace.yaml`
+2. Set up `packages/` folder structure:
+   - `@zenoter/core` - React components, hooks, utilities
+   - `@zenoter/shared` - Auth interfaces, sync engine, storage abstractions
+   - `@zenoter/web` - Vite config, IndexedDB implementation
+3. Move existing components to `@zenoter/core`:
+   - FileTree, ThemeToggle, FeatureFlagDemo
+   - Monaco Editor wrapper
+   - All hooks (useFeatureFlag, useKeyboardShortcut, etc.)
+4. Create editor abstraction layer:
+   ```typescript
+   // @zenoter/core/components/Editor/Editor.types.ts
+   interface EditorProps {
+     value: string;
+     onChange: (value: string) => void;
+     language: string;
+     theme: 'light' | 'dark';
+     readOnly?: boolean;
+   }
 
-- [ ] Monaco Editor integration
-- [ ] File tree with drag-and-drop
-- [ ] SQLite database setup
-- [ ] Note CRUD operations
-- [ ] Markdown preview pane
-- [ ] Auto-save functionality
-- [ ] **Document core features**
-- [ ] **Create user guides**
+   // Platform-specific implementations:
+   // - MonacoEditor.tsx (desktop/web)
+   // - CodeMirrorEditor.tsx (mobile PWA)
+````
 
-#### Week 5-6: Polish & Testing (2025-11-15 to 2025-11-28)
+5. Create storage abstraction layer:
+   ```typescript
+   interface StorageAdapter {
+     get(key: string): Promise<any>;
+     set(key: string, value: any): Promise<void>;
+     delete(key: string): Promise<void>;
+     list(): Promise<string[]>;
+   }
+   ```
+6. Update all imports to use workspace packages
+7. Verify all 224 unit tests + 59 E2E tests pass
+8. Maintain 90%+ code coverage
 
-- [ ] Framer Motion animations
-- [ ] Keyboard shortcuts
-- [ ] Search implementation (local)
-- [ ] Import/Export (markdown files)
-- [ ] Settings panel
-- [ ] E2E tests
-- [ ] Windows installer (.exe)
-- [ ] **Complete documentation**
-- [ ] **API reference generation**
-- [ ] **Video tutorials**
+#### Week 2: Firebase Auth + Backend (Oct 25-31)
+
+- [ ] Set up Firebase project
+- [ ] Implement auth UI (login/signup/reset)
+- [ ] Google OAuth integration
+- [ ] GitHub OAuth integration
+- [ ] Session management
+- [ ] Auth tests (30+ new tests)
+
+#### Week 3: IndexedDB + Sync Engine (Nov 1-7)
+
+- [ ] Implement IndexedDB storage
+- [ ] Build sync engine (debounced, background)
+- [ ] Conflict resolution (last-write-wins)
+- [ ] Offline queue with retry
+- [ ] Sync UI indicators
+- [ ] **Git-like commit system (auto-daily saves)**
+  - [ ] Commit metadata schema (Firestore)
+  - [ ] Storage abstraction (Cloud Storage for blobs)
+  - [ ] Auto-commit service (daily at midnight)
+  - [ ] Commit history UI (timeline view)
+  - [ ] Restore from commit functionality
+- [ ] Sync tests (40+ new tests)
+
+#### Week 4: Polish + Deploy (Nov 8-14)
+
+- [ ] Performance optimization
+- [ ] SEO setup
+- [ ] Deploy to Vercel
+- [ ] Analytics (GA + Sentry)
+- [ ] Documentation updates
+- [ ] Beta testing
 
 **Deliverables**:
 
-- ✅ Windows desktop app
-- ✅ Local storage only
-- ✅ Documentation site live
-- ✅ No infrastructure costs
-- ✅ GitHub Releases for distribution
+- ✅ Web app with auth + sync
+- ✅ Works offline (IndexedDB cache)
+- ✅ Deployed to production
+- ✅ Lighthouse score > 90
+- ✅ Zero infrastructure costs
 
 ---
 
-### 📋 Phase 2: Cloud Foundation (Weeks 7-10)
+### 📋 Phase 2: Mobile PWA (1 week)
 
-**Target Date**: 2025-12-26  
+**Target Date**: 2025-11-22  
 **Status**: Planned  
-**Infrastructure**: Firebase free tier
+**Infrastructure**: Same as Phase 1 ($0/month)
 
-#### Week 7-8: Authentication & Cloud Setup
+#### Week 5: PWA Features (Nov 15-21)
 
-- [ ] Firebase project setup
-- [ ] OAuth integration (Google, GitHub, Microsoft)
-- [ ] User profile management
-- [ ] Firestore integration for note metadata
-- [ ] Feature flag system implementation
-- [ ] **Document authentication flow**
-- [ ] **Update user guides for cloud features**
+- [ ] Create PWA manifest
+- [ ] Implement service worker
+- [ ] Add install prompt
+- [ ] Push notifications (optional)
+- [ ] Mobile optimizations
+- [ ] PWA testing
 
-#### Week 9-10: Sync & Web
+**Deliverables**:
 
-- [ ] Cloud sync service (manual trigger)
-- [ ] Conflict resolution UI
-- [ ] Web PWA version
-- [ ] Deploy to Netlify
-- [ ] Public landing page
-- [ ] **Document sync features**
-- [ ] **Create PWA installation guide**
-- [ ] **Update roadmap on docs**
-
-**Feature Flags to Enable**:
-
-```javascript
-CLOUD_SYNC: true,      // 10% rollout initially
-AUTH_SYSTEM: true,     // 100% rollout
-VERSION_CONTROL: true, // 50% rollout
-```
-
-**Infrastructure Costs**:
-
-- Firebase: Free tier (10k auth/month, 1GB Firestore)
-- Netlify: Free tier
-- GitHub Pages: Free
-- Total: $0/month
+- ✅ Installable PWA on iOS/Android
+- ✅ Offline mode working
+- ✅ Mobile-optimized UI
 
 ---
 
-### 📈 Phase 3: Scale & Premium (Weeks 11-16)
+### 📈 Phase 3: Desktop Apps (When Requested)
 
-**Target Date**: 2026-02-07  
-**Status**: Planned  
-**Infrastructure**: GCP minimal setup
-
-#### Week 11-12: Enhanced Search & Performance
-
-- [ ] Full-text search with PostgreSQL
-- [ ] Search indexing service
-- [ ] Performance optimizations
-- [ ] Lazy loading for large notebooks
-- [ ] **Document search capabilities**
-- [ ] **Performance tuning guide**
-
-#### Week 13-14: Premium Features
-
-- [ ] Real-time sync
-- [ ] Advanced version control (diff view)
-- [ ] Custom themes
-- [ ] Workspace management
-- [ ] Tag system
-- [ ] **Premium features documentation**
-- [ ] **Theme creation guide**
-
-#### Week 15-16: Infrastructure & Monitoring
-
-- [ ] Migrate to Cloud SQL (PostgreSQL)
-- [ ] Set up Cloud Run for API
-- [ ] Implement subscription system
-- [ ] Analytics and monitoring
-- [ ] A/B testing framework
-- [ ] **Infrastructure documentation**
-- [ ] **API documentation v2**
-
-**Feature Flags to Enable**:
-
-```javascript
-ADVANCED_SEARCH: true,  // 100% rollout
-REAL_TIME_SYNC: true,   // Premium users only
-CUSTOM_THEMES: true,    // Premium users only
-```
-
-**Infrastructure Costs**:
-
-- Cloud SQL (db-f1-micro): ~$15/month
-- Cloud Run: ~$10-30/month (pay per use)
-- Cloud Storage: ~$5/month
-- Custom domain for docs: ~$12/year
-- Total: ~$30-50/month
-
----
-
-### 🚀 Phase 4: Platform Expansion (Weeks 17-24)
-
-**Target Date**: 2026-03-21  
+**Target Date**: Q1 2026 or when triggered  
 **Status**: Future  
-**Infrastructure**: Full GCP with auto-scaling
+**Trigger**: 100+ user requests OR $500+ MRR  
+**Infrastructure**: +$0 (GitHub Releases)
 
-#### Week 17-20: Mobile Development
+#### Scope:
 
-- [ ] React Native setup
-- [ ] iOS app development
-- [ ] Android app development
-- [ ] Mobile-specific optimizations
-- [ ] **Mobile app documentation**
-- [ ] **Platform-specific guides**
+- [ ] Electron app using `@zenoter/core`
+- [ ] SQLite for desktop storage
+- [ ] Same auth/sync as web
+- [ ] Windows → macOS → Linux
+- [ ] Code signing (when affordable)
+- [ ] Auto-update system
 
-#### Week 21-24: Advanced Features
+**Deliverables**:
 
-- [ ] Plugin system architecture
-- [ ] Collaboration features
-- [ ] AI-powered suggestions
-- [ ] Enterprise features
-- [ ] **Plugin development guide**
-- [ ] **Enterprise documentation**
-- [ ] **Collaboration features guide**
+- ✅ Windows app (.exe)
+- ✅ macOS app (.dmg)
+- ✅ Linux app (.AppImage)
 
-**All Feature Flags Enabled for Testing**
+---
+
+### 🚀 Phase 4: Premium Features
+
+**Target Date**: Q2 2026  
+**Status**: Future  
+**Infrastructure**: PostgreSQL + Cloud Run ($85-105/month)
+
+#### Premium Features:
+
+- [ ] **On-Demand Commits** (Premium gated)
+  - [ ] "Commit now" button in editor toolbar
+  - [ ] Server-side entitlement check (Cloud Function)
+  - [ ] Unlimited manual commits for premium users
+  - [ ] Extended retention (1 year vs 30 days)
+  - [ ] Pre-commit diff preview
+  - [ ] Merge/replace restore options
+  - [ ] Billing integration (Stripe webhook)
+- [ ] Real-time collaboration
+- [ ] Advanced search
+- [ ] Custom themes
+- [ ] Premium tier ($5-10/month)
+
+**Retention Policies**:
+
+- **Free users**: 1 auto-daily commit/day, 30-day retention, 1 on-demand/month
+- **Premium users**: Unlimited on-demand commits, 1-year retention
+
+**Goal**: $500+ MRR (50+ premium users)
 
 ---
 

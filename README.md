@@ -1,6 +1,8 @@
 # Zenoter 🚀
 
-> A modern, animated note-taking app for developers with VS Code-like interface
+> A modern, cloud-synced note-taking app for developers with VS Code-like interface
+
+**🎯 Strategy**: Web-first → Mobile PWA → Desktop apps | Multi-device sync from day 1
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 [![Qualification](https://github.com/rumankazi/zenoter/actions/workflows/qualification.yml/badge.svg)](https://github.com/rumankazi/zenoter/actions/workflows/qualification.yml)
@@ -9,13 +11,17 @@
 ## ✨ Features
 
 - 📝 **Monaco Editor** - VS Code's powerful editor at the core
+- ☁️ **Cloud Sync** - Access your notes from any device
+- 🔐 **Secure Auth** - Firebase Auth with OAuth (Google, GitHub)
+- 📡 **Offline-First** - Works without internet, syncs when online
 - 🎨 **Beautiful Animations** - Smooth, modern animations throughout
 - 🌙 **Dark/Light Themes** - Easy on the eyes for long coding sessions
 - 🔍 **Advanced Search** - Full-text search with regex support
-- 📁 **Drag & Drop** - Organize notes effortlessly
 - ⚡ **Lightning Fast** - Instant startup and 60fps animations
 - 💾 **Auto-Save** - Never lose your work
-- 🔐 **Secure** - Local storage with optional cloud sync (coming soon)
+- 🕰️ **Time Travel** - Daily auto-commits, restore any previous version
+- ⚡ **On-Demand Commits** (Premium) - Save snapshots anytime with custom messages
+- 📱 **Progressive Web App** - Install on mobile like a native app
 
 ## 🚀 Quick Start
 
@@ -67,46 +73,52 @@ Visit our [documentation site](https://rumankazi.github.io/zenoter/) for detaile
 
 ## 🛠️ Tech Stack
 
-- **Desktop Framework**: Electron + React 18+
-- **Editor**: Monaco Editor
+### Tech Stack
+
+- **Frontend**: React 18+ (shared across all platforms)
+- **Editor**: Monaco Editor (desktop/web), CodeMirror 6 (mobile PWA)
+- **Database**: IndexedDB (local) + Firestore (cloud sync)
+- **Auth**: Firebase Auth (OAuth + email/password)
 - **Animations**: Framer Motion + Lottie
-- **State Management**: Zustand
-- **Styling**: Emotion CSS-in-JS
-- **Database**: SQLite (local), PostgreSQL (cloud - coming soon)
+- **Styling**: CSS Modules (CSP compliant)
+- **State**: Zustand
 - **Testing**: Vitest + Playwright
-- **Build Tool**: Vite
-- **Package Manager**: pnpm
+- **Hosting**: Vercel/Netlify (web) + GitHub Releases (desktop)
 
 ## 🗺️ Roadmap
 
-### Phase 1: MVP (Current) ⚡
+### Phase 1: Web MVP with Auth + Sync (4 weeks) ⚡
 
 - ✅ Core editor functionality
-- ✅ File management
+- ✅ Firebase authentication
+- ✅ Cloud sync with Firestore
+- ✅ Offline-first architecture (IndexedDB)
 - ✅ Markdown preview
 - ✅ Dark/Light themes
-- ⏳ Windows installer
+- ⏳ Git-like commits (daily auto-save)
+- ⏳ Commit history & restore
+- ⏳ Deploy to Vercel
 
-### Phase 2: Cloud Features ☁️
+### Phase 2: Mobile PWA (1 week) 📱
 
-- 🔜 User authentication
-- 🔜 Cloud synchronization
-- 🔜 Version history
-- 🔜 Web app (PWA)
+- 🔜 PWA manifest
+- 🔜 Service worker for offline
+- 🔜 Push notifications
+- 🔜 Install prompt
 
-### Phase 3: Premium Features 💎
+### Phase 3: Desktop Apps (When users request) �️
 
-- 🔜 Real-time sync
+- 🔜 Electron app using shared code
+- 🔜 Windows → macOS → Linux
+- 🔜 Same auth/sync as web
+
+### Phase 4: Advanced Features 🚀
+
+- 🔜 On-demand commits (Premium: $5-10/month)
+- 🔜 Real-time collaboration
+- 🔜 Extended version history (1 year)
 - 🔜 Custom themes
-- 🔜 Advanced search
-- 🔜 macOS & Linux support
-
-### Phase 4: Mobile & Beyond 📱
-
-- 🔜 iOS & Android apps
-- 🔜 Collaboration features
-- 🔜 Plugin system
-- 🔜 AI-powered features
+- 🔜 React Native mobile apps (if needed)
 
 ## 🤝 Contributing
 
